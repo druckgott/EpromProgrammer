@@ -30,42 +30,7 @@
 //write a byte to eprom
 void WriteDataByte(uint8_t data)
 {
-#ifndef OPTIMIZE_FOR_SPEED
-  digitalWrite(D0_PIN, (data & (1 << 0)));
-  digitalWrite(D1_PIN, (data & (1 << 1)));
-  digitalWrite(D2_PIN, (data & (1 << 2)));
-  digitalWrite(D3_PIN, (data & (1 << 3)));
-  digitalWrite(D4_PIN, (data & (1 << 4)));
-  digitalWrite(D5_PIN, (data & (1 << 5)));
-  digitalWrite(D6_PIN, (data & (1 << 6)));
-  digitalWrite(D7_PIN, (data & (1 << 7)));
-#else
-  uint8_t portB = digitalPinToPort(D1_PIN);
-  uint8_t portD = digitalPinToPort(D0_PIN);
-
-  uint8_t maskD0 = !(data & 0x01) ? ~digitalPinToBitMask(D0_PIN) : 0xFF;
-  uint8_t maskD1 = !(data & 0x02) ? ~digitalPinToBitMask(D1_PIN) : 0xFF;
-  uint8_t maskD2 = !(data & 0x04) ? ~digitalPinToBitMask(D2_PIN) : 0xFF;
-  uint8_t maskD3 = !(data & 0x08) ? ~digitalPinToBitMask(D3_PIN) : 0xFF;
-  uint8_t maskD4 = !(data & 0x10) ? ~digitalPinToBitMask(D4_PIN) : 0xFF;
-  uint8_t maskD5 = !(data & 0x20) ? ~digitalPinToBitMask(D5_PIN) : 0xFF;
-  uint8_t maskD6 = !(data & 0x40) ? ~digitalPinToBitMask(D6_PIN) : 0xFF;
-  uint8_t maskD7 = !(data & 0x80) ? ~digitalPinToBitMask(D7_PIN) : 0xFF;
-
-  uint8_t maskB = 0xFF & maskD1 & maskD2;
-  uint8_t maskD = 0xFF & maskD0 & maskD3 & maskD4 & maskD5 & maskD6 & maskD7;
-
-  volatile uint8_t *outB = portOutputRegister(portB);
-  volatile uint8_t *outD = portOutputRegister(portD);
-
-  uint8_t backupSREG = SREG;
-  cli();
-
-  *outB &= maskB;
-  *outD &= maskD;
-  
-  SREG = backupSREG;
-#endif
+  PORTA = data; // Schreibt das Byte gleichzeitig auf alle 8 Pins
 }
 //------------------------------------------------------------------------------
 

@@ -30,65 +30,7 @@
 //read a byte from eprom
 uint8_t ReadDataByte(void)
 {
-#ifndef OPTIMIZE_FOR_SPEED
-  uint8_t data = 0;
-  
-  data |= digitalRead(D0_PIN) << 0;
-  data |= digitalRead(D1_PIN) << 1;
-  data |= digitalRead(D2_PIN) << 2;
-  data |= digitalRead(D3_PIN) << 3;
-  data |= digitalRead(D4_PIN) << 4;
-  data |= digitalRead(D5_PIN) << 5;
-  data |= digitalRead(D6_PIN) << 6;
-  data |= digitalRead(D7_PIN) << 7;
-
-  return data;
-#else
-  uint8_t portB = digitalPinToPort(D1_PIN);
-  uint8_t portD = digitalPinToPort(D0_PIN);
-
-  uint8_t maskD0 = digitalPinToBitMask(D0_PIN);
-  uint8_t maskD1 = digitalPinToBitMask(D1_PIN);
-  uint8_t maskD2 = digitalPinToBitMask(D2_PIN);
-  uint8_t maskD3 = digitalPinToBitMask(D3_PIN);
-  uint8_t maskD4 = digitalPinToBitMask(D4_PIN);
-  uint8_t maskD5 = digitalPinToBitMask(D5_PIN);
-  uint8_t maskD6 = digitalPinToBitMask(D6_PIN);
-  uint8_t maskD7 = digitalPinToBitMask(D7_PIN);
-
-  uint8_t maskB = maskD1 | maskD2;
-  uint8_t maskD = maskD0 | maskD3 | maskD4 | maskD5 | maskD6 | maskD7;
-  
-  uint8_t resultB = *portInputRegister(portB) & maskB;
-  uint8_t resultD = *portInputRegister(portD) & maskD;
-
-  uint8_t data = 0;
-  if(resultD & maskD0) {
-    data |= 0x01;
-  }
-  if(resultB & maskD1) {
-    data |= 0x02;
-  }
-  if(resultB & maskD2) {
-    data |= 0x04;
-  }
-  if(resultD & maskD3) {
-    data |= 0x08;
-  }
-  if(resultD & maskD4) {
-    data |= 0x10;
-  }
-  if(resultD & maskD5) {
-    data |= 0x20;
-  }
-  if(resultD & maskD6) {
-    data |= 0x40;
-  }
-  if(resultD & maskD7) {
-    data |= 0x80;
-  }
-  return data;
-#endif
+  return PINA; // Liest alle 8 Pins (22-29) gleichzeitig ein
 }
 //------------------------------------------------------------------------------
 

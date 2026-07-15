@@ -45,32 +45,24 @@ int8_t StringPos(uint8_t *bytes, const char *test, uint8_t offset = 0);
 
 void setup() 
 {
-  // set voltage reference to external
-  analogReference(EXTERNAL);
-  analogRead(VPP_TEST_PIN);
-  analogRead(VCC_TEST_PIN);
-    
-  // 74HC595
-  pinMode(SER_PIN, OUTPUT);
-  pinMode(SCK_PIN, OUTPUT);
-  pinMode(RCK_PIN, OUTPUT);
+  // --- ALTE PINS ENTFERNT ---
+  
+  // Setze unsere direkten Adress-Pins als OUTPUT
+  for(int i = 30; i <= 48; i++) {
+    pinMode(i, OUTPUT);
+  }
 
+  // Setze die EPROM-Steuerpins als OUTPUT
   pinMode(NCE_PIN, OUTPUT);
   pinMode(NOE_PIN, OUTPUT);
-  pinMode(A13_VCC_PIN, OUTPUT);
-  pinMode(A17_VCC_PIN, OUTPUT);
-
-  // set mux output
-  pinMode(MUX_B0_PIN, OUTPUT);
-  pinMode(MUX_B1_PIN, OUTPUT);
-  pinMode(MUX_B2_PIN, OUTPUT);
+  pinMode(VPP_EN_PIN, OUTPUT); // Unser neuer 12.5V Schalter
   
   InitializeEpromToAKnownState();
 
   SerialBuffer[SERIAL_BUF_LEN] = 0x00;
   
   Serial.begin(115200);
-  Serial.println(F("27[C]XXXX programmer"));
+  Serial.println(F("27[C]XXXX programmer (Mega Direct)"));
   Serial.flush();
 
   CommandMode = COMMAND_MODE::WAIT;

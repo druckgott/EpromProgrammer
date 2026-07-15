@@ -29,53 +29,42 @@
 
 #define OPTIMIZE_FOR_SPEED
 
-// 74HC595
-#define SER_PIN A0
-#define SCK_PIN A1
-#define RCK_PIN A2
+// --- Direkte Pin-Belegung für Arduino Mega ---
 
-// Data
-#define D0_PIN 7
-#define D1_PIN 8
-#define D2_PIN 9
-#define D3_PIN 6
-#define D4_PIN 5
-#define D5_PIN 4
-#define D6_PIN 3
-#define D7_PIN 2
+// Data (Q0-Q7 mapping auf Mega Pins 22-29 / PORTA)
+#define D0_PIN 22
+#define D1_PIN 23
+#define D2_PIN 24
+#define D3_PIN 25
+#define D4_PIN 26
+#define D5_PIN 27
+#define D6_PIN 28
+#define D7_PIN 29
 
 // Eprom control
-#define NCE_PIN     A3
-#define NOE_PIN     A4
-#define A13_VCC_PIN A5
-#define A17_VCC_PIN 13
+#define NCE_PIN     50
+#define NOE_PIN     51
+#define VPP_EN_PIN  52 // Steuert deinen 12.5V Transistor
+
+// Dummy-Definitionen (damit die Menüführung nicht abstürzt)
+#define A13_VCC_PIN 0
+#define A17_VCC_PIN 0
 #define NO_VCC_PIN  0
-#define MUX_B0_PIN  12
-#define MUX_B1_PIN  11
-#define MUX_B2_PIN  10
-#define A11_VPP_PIN 1
-#define NOE_VPP_PIN 3
-#define A15_VPP_PIN 5
-#define A19_VPP_PIN 7
+#define A11_VPP_PIN 0
+#define NOE_VPP_PIN 0
+#define A15_VPP_PIN 0
+#define A19_VPP_PIN 0
 #define NO_VPP_PIN  0
 
-// Voltage test
-#define VPP_TEST_PIN    A7
-#define VPP_R_PWR_VALUE 9944.0
-#define VPP_R_GND_VALUE 894.0
-#define VCC_TEST_PIN    A6
-#define VCC_R_PWR_VALUE 9974.0
-#define VCC_R_GND_VALUE 4662.0
-#define AREF_VALUE      2.466
-
+// Serial & Timing
 #define SERIAL_BUF_LEN 32
 #define TEST_STEP_WAIT 2500
-#define VOLTAGE_CHECKS 250
-
 #define MIN_VCC 4.50
 #define MAX_VCC 6.50
 #define MIN_VPP 10.00
 #define MAX_VPP 30.00
+
+// ... Lass den Rest (COMMANDS, ENUMS) der Datei unangetastet ...
 
 // commands
 #define COMMAND_FLAG           "@CMD"

@@ -68,3 +68,112 @@ The files for 3D printing a case are available in [FreeCAD](FreeCAD) folder
 
 ## GUI images
 ![Write](images/write.jpg) ![Verify](images/verify.jpg) ![EPROM options](images/eprom.jpg)
+
+
+# Arduino Mega EPROM Programmer (Direct Wiring)
+
+Dieses Projekt ermöglicht das Auslesen und Beschreiben von UV-EPROMs (speziell **ST M27C4001 / 27C040**) mit einem Arduino Mega 2560.
+Durch die hohe Anzahl an Pins am Mega werden **keine Schieberegister** benötigt. Das EPROM wird direkt verkabelt.
+
+## ⚠️ Wichtiger Warnhinweis
+Das M27C4001 ist ein **5V-Baustein**, benötigt zum *Schreiben* (Brennen) jedoch zwingend **12,5V an Pin 1 (VPP)**. 
+**Verbinde NIEMALS die 12,5V direkt mit einem Pin des Arduinos!** Dies zerstört den Mikrocontroller sofort. Nutze zwingend die unten beschriebene Transistor-Schaltung.
+
+https://www.datasheet-pdf.info/entry/M27C4001
+
+---
+
+## 1. Spannungsversorgung (Power)
+
+| EPROM Pin | Name | Anschluss am Arduino Mega / Schaltung |
+| :--- | :--- | :--- |
+| 16 | **GND** | `GND` (Masse) |
+| 32 | **VCC** | `5V` Pin des Arduinos |
+| 1 | **VPP** | *Geht an den Ausgang der Transistor-Schaltung (siehe unten)* |
+
+![Pinout_M27C4001](images/M27C4001.png) 
+---
+
+## 2. Daten-Pins (PORTA für maximale Geschwindigkeit)
+
+| EPROM Pin | Name | Arduino Mega Pin |
+| :--- | :--- | :--- |
+| 13 | **Q0** | Digital `22` |
+| 14 | **Q1** | Digital `23` |
+| 15 | **Q2** | Digital `24` |
+| 17 | **Q3** | Digital `25` |
+| 18 | **Q4** | Digital `26` |
+| 19 | **Q5** | Digital `27` |
+| 20 | **Q6** | Digital `28` |
+| 21 | **Q7** | Digital `29` |
+
+![Pinout_M27C4001](images/M27C4001.png) 
+
+---
+
+## 3. Adress-Pins
+
+| EPROM Pin | Name | Arduino Mega Pin |
+| :--- | :--- | :--- |
+| 12 | **A0** | Digital `30` |
+| 11 | **A1** | Digital `31` |
+| 10 | **A2** | Digital `32` |
+| 9 | **A3** | Digital `33` |
+| 8 | **A4** | Digital `34` |
+| 7 | **A5** | Digital `35` |
+| 6 | **A6** | Digital `36` |
+| 5 | **A7** | Digital `37` |
+| 27 | **A8** | Digital `38` |
+| 26 | **A9** | Digital `39` |
+| 23 | **A10** | Digital `40` |
+| 25 | **A11** | Digital `41` |
+| 4 | **A12** | Digital `42` |
+| 28 | **A13** | Digital `43` |
+| 29 | **A14** | Digital `44` |
+| 3 | **A15** | Digital `45` |
+| 2 | **A16** | Digital `46` |
+| 30 | **A17** | Digital `47` |
+| 31 | **A18** | Digital `48` |
+
+![Pinout_M27C4001](images/M27C4001.png) 
+
+---
+
+## 4. Steuer-Pins
+
+| EPROM Pin | Name | Arduino Mega Pin | Funktion |
+| :--- | :--- | :--- | :--- |
+| 22 | **CE** | Digital `50` | Chip Enable (Aktiv LOW) |
+| 24 | **OE** | Digital `51` | Output Enable (Aktiv LOW) |
+| - | **VPP_EN**| Digital `52` | **Steuert deine VPP Transistor-Schaltung** |
+
+![Pinout_M27C4001](images/M27C4001.png) 
+
+---
+
+## 5. Die 12,5V VPP Transistor-Schaltung (High-Side Switch)
+
+Um die 12,5V blitzschnell und sicher ein- und auszuschalten, musst du eine kleine Schaltung auf dem Breadboard aufbauen. Der Arduino-Pin 52 steuert diese Schaltung.
+
+### Benötigte Bauteile:
+* 1x externes DC-Netzteil (exakt **12,0V bis 12,5V**)
+* 1x NPN-Transistor (z. B. 2N3904, BC547)
+* 1x PNP-Transistor (z. B. 2N3906, BC557)
+* 2x 1kΩ Widerstand
+* 1x 10kΩ Widerstand
+* 1x Standard-Diode (z. B. 1N4148 oder 1N4007)
+
+### Aufbau der Schaltung:
+
+1. **Gemeinsame Masse:** Verbinde den Minus-Pol (GND) deines 12,5V-Netzteils zwingend mit dem GND des Arduinos.
+2. **Der Steuereingang:** Verbinde Arduino **Pin 52** über einen **1kΩ Widerstand** mit der Basis (B) des **NPN**-Transistors.
+3. **NPN Masse:** Verbinde den Emitter (E) des **NPN**-Transistors mit **GND**.
+4. **Verbindung der Transistoren:** Verbinde den Kollektor (C) des **NPN**-Transistors über den zweiten **1kΩ Widerstand** mit der Basis (B) des **PNP**-Transistors.
+5. **Der 12,5V Eingang:** Verbinde den Emitter (E) des **PNP**-Transistors mit dem Plus-Pol (**12,5V**) deines Netzteils.
+6. **Pull-Up für Sicherheit:** Setze den **10kΩ Widerstand** zwischen den Emitter (12,5V) und die Basis (B) des **PNP**-Transistors (das hält ihn standardmäßig sicher abgeschaltet).
+7. **Der VPP Ausgang:** Der Kollektor (C) des **PNP**-Transistors geht direkt an **Pin 1 (VPP)** des EPROMs.
+
+### Der Dioden-Trick (Für das Auslesen):
+Das EPROM verlangt, dass am VPP-Pin während des reinen Auslesens 5V anliegen. 
+* Setze die **Diode** so ein, dass der Strom vom **5V-Pin des Arduinos** zum **Pin 1 (VPP) des EPROMs** fließen kann (der silberne Strich der Diode zeigt zum EPROM). 
+* **Warum?** So bekommt der VPP-Pin standardmäßig fast 5V zum Lesen. Wenn der Arduino Pin 52 auf HIGH setzt und die vollen 12,5V aus deiner Schaltung auf den EPROM-Pin schießen, blockiert die Diode diese Spannung rückwärts und schützt deinen Arduino vor dem Durchschmoren.

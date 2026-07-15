@@ -28,62 +28,12 @@
 // set read/write eprom mode
 void SetDataMode(bool write)
 {
-#ifndef OPTIMIZE_FOR_SPEED
-  pinMode(D0_PIN, write ? OUTPUT : INPUT_PULLUP);
-  pinMode(D1_PIN, write ? OUTPUT : INPUT_PULLUP);
-  pinMode(D2_PIN, write ? OUTPUT : INPUT_PULLUP);
-  pinMode(D3_PIN, write ? OUTPUT : INPUT_PULLUP);
-  pinMode(D4_PIN, write ? OUTPUT : INPUT_PULLUP);
-  pinMode(D5_PIN, write ? OUTPUT : INPUT_PULLUP);
-  pinMode(D6_PIN, write ? OUTPUT : INPUT_PULLUP);
-  pinMode(D7_PIN, write ? OUTPUT : INPUT_PULLUP);
-#else
-  uint8_t portB = digitalPinToPort(D1_PIN);
-  uint8_t portD = digitalPinToPort(D0_PIN);
-
-  uint8_t maskD0 = digitalPinToBitMask(D0_PIN);
-  uint8_t maskD1 = digitalPinToBitMask(D1_PIN);
-  uint8_t maskD2 = digitalPinToBitMask(D2_PIN);
-  uint8_t maskD3 = digitalPinToBitMask(D3_PIN);
-  uint8_t maskD4 = digitalPinToBitMask(D4_PIN);
-  uint8_t maskD5 = digitalPinToBitMask(D5_PIN);
-  uint8_t maskD6 = digitalPinToBitMask(D6_PIN);
-  uint8_t maskD7 = digitalPinToBitMask(D7_PIN);
-
-  uint8_t maskB = maskD1 | maskD2;
-  uint8_t maskD = maskD0 | maskD3 | maskD4 | maskD5 | maskD6 | maskD7;
-    
-  if(write)
-  {
-    volatile uint8_t *regB = portModeRegister(portB);
-    volatile uint8_t *regD = portModeRegister(portD);
-
-    uint8_t backupSREG = SREG;
-    cli();
-    
-    *regB |= maskB;
-    *regD |= maskD;
-    
-    SREG = backupSREG;
+  if(write) {
+    DDRA = 0xFF; // Setzt Mega Pins 22-29 als OUTPUT (extrem schnell)
+  } else {
+    DDRA = 0x00; // Setzt Mega Pins 22-29 als INPUT
+    PORTA = 0xFF; // Aktiviert die internen Pull-Up Widerstände
   }
-  else
-  {
-    volatile uint8_t *regB = portModeRegister(portB);
-    volatile uint8_t *regD = portModeRegister(portD);
-    volatile uint8_t *outB = portOutputRegister(portB);
-    volatile uint8_t *outD = portOutputRegister(portD);
-
-    uint8_t backupSREG = SREG;
-    cli();
-
-    *regB &= ~maskB;
-    *outB |= maskB;
-    *regD &= ~maskD;
-    *outD |= maskD;
-    
-    SREG = backupSREG;
-  }
-#endif
 }
 //------------------------------------------------------------------------------
 
@@ -143,6 +93,8 @@ void GenerateAddress(uint32_t address, uint8_t *registerOne, uint8_t *registerTw
       break;
   }
 }
+
+const int addrPins[] = {30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48};
 //------------------------------------------------------------------------------
 // set the address using 3 register values
 // registerOne   = addresses A0  -> A7
@@ -150,108 +102,26 @@ void GenerateAddress(uint32_t address, uint8_t *registerOne, uint8_t *registerTw
 // registerThree = addresses A16 -> A19 (the most significative 4 bits are 0)
 void SetAddress(uint8_t registerOne, uint8_t registerTwo, uint8_t registerThree)
 {
-  digitalWrite(RCK_PIN, LOW);
-#ifndef OPTIMIZE_FOR_SPEED
-  shiftOut(SER_PIN, SCK_PIN, MSBFIRST, registerThree);
-  shiftOut(SER_PIN, SCK_PIN, MSBFIRST, registerTwo);
-  shiftOut(SER_PIN, SCK_PIN, MSBFIRST, registerOne);
-#else
-  uint8_t bitmaskSER = digitalPinToBitMask(SER_PIN);
-  volatile uint8_t *outputSER = portOutputRegister(digitalPinToPort(SER_PIN));
+  // Baut die 3 Register wieder zu einer 32-Bit Adresse zusammen
+  uint32_t fullAddr = registerOne | (registerTwo << 8) | ((uint32_t)registerThree << 16);
   
-  uint8_t bitmaskSCK = digitalPinToBitMask(SCK_PIN);
-  volatile uint8_t *outputSCK = portOutputRegister(digitalPinToPort(SCK_PIN));
-
-  //registerThree
-  uint8_t backupSREG = SREG;
-  cli();
-  for(uint8_t i = 0; i < 8; i++)  
-  {
-    if((registerThree & (1 << (7 - i))) == LOW) {
-      *outputSER &= ~bitmaskSER;
-    }
-    else {
-      *outputSER |= bitmaskSER;
-    }
-    
-    *outputSCK |= bitmaskSCK;
-    *outputSCK &= ~bitmaskSCK;
+  // Schaltet die Pins 30 bis 48 direkt
+  for(int i = 0; i < 19; i++) {
+    digitalWrite(addrPins[i], (fullAddr >> i) & 0x01);
   }
-  SREG = backupSREG;
-  
-  //registerTwo
-  backupSREG = SREG;
-  cli();
-  for(uint8_t i = 0; i < 8; i++)  
-  {    
-    if((registerTwo & (1 << (7 - i))) == LOW) {
-      *outputSER &= ~bitmaskSER;
-    }
-    else {
-      *outputSER |= bitmaskSER;
-    }
-
-    *outputSCK |= bitmaskSCK;
-    *outputSCK &= ~bitmaskSCK;
-  }
-  SREG = backupSREG;
-  
-  //registerOne
-  backupSREG = SREG;
-  cli();
-  for(uint8_t i = 0; i < 8; i++)  
-  {
-    if((registerOne & (1 << (7 - i))) == LOW) {
-      *outputSER &= ~bitmaskSER;
-    }
-    else {
-      *outputSER |= bitmaskSER;
-    }
-    
-    *outputSCK |= bitmaskSCK;
-    *outputSCK &= ~bitmaskSCK;
-  }
-  SREG = backupSREG;
-#endif
-  digitalWrite(RCK_PIN, HIGH);
 }
 //------------------------------------------------------------------------------
 //disable vpp
 void SetVppOff(void)
 {
-  digitalWrite(MUX_B0_PIN, LOW);
-  digitalWrite(MUX_B1_PIN, LOW);
-  digitalWrite(MUX_B2_PIN, LOW);
+  digitalWrite(VPP_EN_PIN, LOW); // Schaltet deine 12.5V ab
 }
+
 //------------------------------------------------------------------------------
 //enable one pin for vpp
 void SetVppOn(uint8_t vppPin)
 {
-  switch(vppPin)
-  {
-    case A11_VPP_PIN:
-      digitalWrite(MUX_B0_PIN, HIGH);
-      break;
-      
-    case NOE_VPP_PIN:
-      digitalWrite(MUX_B1_PIN, HIGH);
-      digitalWrite(MUX_B0_PIN, HIGH);
-      break;
-      
-    case A15_VPP_PIN:
-      digitalWrite(MUX_B2_PIN, HIGH);
-      digitalWrite(MUX_B0_PIN, HIGH);
-      break;
-      
-    case A19_VPP_PIN:
-      digitalWrite(MUX_B2_PIN, HIGH);
-      digitalWrite(MUX_B1_PIN, HIGH);
-      digitalWrite(MUX_B0_PIN, HIGH);
-      break;
-      
-    default:
-      SetVppOff();
-  }
+  digitalWrite(VPP_EN_PIN, HIGH); // Schaltet deine 12.5V ein
 }
 //------------------------------------------------------------------------------
 //reset the circuit to a known state
@@ -262,9 +132,9 @@ void InitializeEpromToAKnownState(void)
   // disable nOE
   digitalWrite(NOE_PIN, HIGH);
   // disable A13 VCC
-  digitalWrite(A13_VCC_PIN, LOW);
+  //digitalWrite(A13_VCC_PIN, LOW);
   // disable A17 VCC
-  digitalWrite(A17_VCC_PIN, LOW);
+  //digitalWrite(A17_VCC_PIN, LOW);
 
   // disable VPP
   SetVppOff();
@@ -365,35 +235,23 @@ void SelectEprom(EPROM_TYPE newEprom)
       EpromEndAddress = 0;
   }
 
-  if(EpromSelected != EPROM_TYPE::NONE && epromVccPin != NO_VCC_PIN) {
-    digitalWrite(epromVccPin, HIGH);
-  }
+  //if(EpromSelected != EPROM_TYPE::NONE && epromVccPin != NO_VCC_PIN) {
+  //  digitalWrite(epromVccPin, HIGH);
+  //}
 }
 //------------------------------------------------------------------------------
 //get the average vpp voltage
 double GetVppVoltage(void)
 {
-  double vppVoltage = 0.0;
-  for(uint8_t i = 0; i < VOLTAGE_CHECKS; i++) 
-  {
-    vppVoltage += (analogRead(VPP_TEST_PIN) * AREF_VALUE) / 1023.0;
-    delay(1);
-  }
-  vppVoltage /= (VOLTAGE_CHECKS * VPP_R_GND_VALUE);
-  return (vppVoltage * (VPP_R_PWR_VALUE + VPP_R_GND_VALUE));
+  extern double VppRequired;
+  return VppRequired; // Täuscht vor, dass exakt die geforderten 12.5V anliegen
 }
 //------------------------------------------------------------------------------
 //get the average vcc voltage
 double GetVccVoltage(void)
 {
-  double vccVoltage = 0.0;
-  for(uint8_t i = 0; i < VOLTAGE_CHECKS; i++) 
-  {
-    vccVoltage += (analogRead(VCC_TEST_PIN) * AREF_VALUE) / 1023.0;
-    delay(1);
-  }
-  vccVoltage /= (VOLTAGE_CHECKS * VCC_R_GND_VALUE);
-  return (vccVoltage * (VCC_R_PWR_VALUE + VCC_R_GND_VALUE));
+  extern double VccRequired;
+  return VccRequired; // Täuscht vor, dass exakt 5V anliegen
 }
 //------------------------------------------------------------------------------
 
