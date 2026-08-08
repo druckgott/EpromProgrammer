@@ -206,6 +206,8 @@ Das EPROM verlangt, dass am VPP-Pin während des reinen Auslesens VPP = VCC anli
 * **Wichtig:** Die Diode muss vom **VCC-Pin** des EPROMs abgehen, nicht fest vom 5V-Arduino-Pin — da VCC bei dir jetzt schaltbar zwischen 5V und 6,25V ist (siehe Abschnitt 6), folgt VPP beim Lesen automatisch dem aktuellen VCC-Pegel.
 * Wenn Arduino Pin 52 auf HIGH schaltet und die vollen 12,75V aus der Transistor-Schaltung auf VPP treiben, sperrt die Diode in Rückwärtsrichtung und schützt den Rest der Schaltung.
 
+![VPP Transistor-Schaltung](images/vpp_switch_schaltung.png)
+
 ---
 
 ## 6. Die VCC-Umschaltung (5V ↔ 6,25V)
@@ -230,6 +232,8 @@ Du brauchst dafür eine **zweite Spannungsquelle mit 6,25V** (z. B. ein zweites 
 8. **5V als Grundversorgung:** Der 5V-Arduino-Pin bleibt zusätzlich fest mit dem VCC-Pin des EPROMs verbunden (über eine **Schottky-Diode**, Durchlassrichtung zum EPROM hin) — genau wie beim VPP-Dioden-Trick in Abschnitt 5. Das sorgt dafür, dass VCC im Ruhezustand (Lesen) bei ~5V liegt, und beim Zuschalten der 6,25V blockiert die Diode ein Rückfließen in den 5V-Arduino-Pin.
 
 **Wichtig für die Sequenz:** Dein Sketch muss VCC **immer zuerst** auf 6,25V bringen (Pin 53 HIGH), **bevor** VPP auf 12,75V geschaltet wird (Pin 52 HIGH) — und beim Beenden umgekehrt: erst VPP auf 0 (Pin 52 LOW), dann VCC zurück auf 5V (Pin 53 LOW).
+
+![VCC-Umschaltung](images/vcc_switch_schaltung.png)
 
 ### Restliche Bauteile aus deinem Bestand (Reserve / Alternativen)
 
