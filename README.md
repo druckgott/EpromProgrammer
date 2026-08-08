@@ -75,28 +75,44 @@ The files for 3D printing a case are available in [FreeCAD](FreeCAD) folder
 Dieses Projekt ermöglicht das Auslesen und Beschreiben von UV-EPROMs (speziell **ST M27C4001 / 27C040**) mit einem Arduino Mega 2560.
 Durch die hohe Anzahl an Pins am Mega werden **keine Schieberegister** benötigt. Das EPROM wird direkt verkabelt.
 
-## ⚠️ Wichtiger Warnhinweis
-Das M27C4001 ist ein **5V-Baustein**, benötigt zum *Schreiben* (Brennen) jedoch zwingend **12,5V an Pin 1 (VPP)**. 
-**Verbinde NIEMALS die 12,5V direkt mit einem Pin des Arduinos!** Dies zerstört den Mikrocontroller sofort. Nutze zwingend die unten beschriebene Transistor-Schaltung.
+Alle Tabellen unten enthalten jetzt drei Spalten, damit keine Verwechslung mehr möglich ist:
+- **EPROM Pin** = die physische Pin-Nummer am Gehäuse (1–32, wie im Pinout-Bild eingekreist)
+- **Chip-Label** = die Bezeichnung, die exakt so auf dem Pinout-Diagramm des Herstellers steht (z. B. `VSS`, nicht "GND")
+- **Bedeutung / Arduino-Pin** = Erklärung bzw. Zielpin am Arduino Mega
 
-https://www.datasheet-pdf.info/entry/M27C4001
+## ⚠️ Wichtiger Warnhinweis
+Das M27C4001 arbeitet beim **Lesen** mit 5V, benötigt zum **Schreiben** (Brennen) jedoch zwingend:
+- **12,75V ± 0,25V an Pin 1 (Chip-Label `VPP`)**
+- **6,25V ± 0,25V an Pin 32 (Chip-Label `VCC`)** — nicht nur 5V!
+
+**Verbinde NIEMALS die 12,75V direkt mit einem Pin des Arduinos!** Dies zerstört den Mikrocontroller sofort. Nutze zwingend die unten beschriebene Transistor-Schaltung.
+
+**Power-Sequencing-Regel (laut Datenblatt zwingend einzuhalten):**
+> VCC muss gleichzeitig mit oder vor VPP angelegt werden. Beim Abschalten gilt die umgekehrte Reihenfolge: VPP zuerst runter, dann VCC.
+
+D.h. in der Steuerlogik (Sketch) immer: **VCC hoch → dann VPP hoch** beim Start des Schreibens, und **VPP runter → dann VCC runter** beim Beenden. Niemals VPP ohne anliegendes VCC schalten.
+
+Datenblatt: https://www.datasheet-pdf.info/entry/M27C4001
 
 ---
 
 ## 1. Spannungsversorgung (Power)
 
-| EPROM Pin | Name | Anschluss am Arduino Mega / Schaltung |
-| :--- | :--- | :--- |
-| 16 | **GND** | `GND` (Masse) |
-| 32 | **VCC** | `5V` Pin des Arduinos |
-| 1 | **VPP** | *Geht an den Ausgang der Transistor-Schaltung (siehe unten)* |
+| EPROM Pin | Chip-Label | Bedeutung | Anschluss am Arduino Mega / Schaltung |
+| :--- | :--- | :--- | :--- |
+| 16 | **VSS** | Masse (0V) — *im Pinout-Bild steht `VSS`, nicht "GND"* | `GND` (Masse) |
+| 32 | **VCC** | Versorgungsspannung | **Schaltbare Versorgung: 5V zum Lesen / 6,25V ± 0,25V zum Schreiben** (siehe Abschnitt 6) |
+| 1 | **VPP** | Programmierspannung | *Geht an den Ausgang der Transistor-Schaltung (siehe Abschnitt 5)* |
 
-![Pinout_M27C4001](images/M27C4001.png) 
+![Pinout_M27C4001](images/M27C4001.png)
+
+> **Hinweis:** Anders als in älteren Bauanleitungen oft angenommen, reicht ein fester 5V-Anschluss an VCC **nicht** aus. Für den Programmiermodus muss VCC auf 6,25V angehoben werden – sonst läuft der Chip außerhalb der Spezifikation und das Programmieren funktioniert nicht zuverlässig (Datenblatt: "TA = 25°C; VCC = 6,25V ± 0,25V; VPP = 12,75V ± 0,25V" im Programmiermodus).
+
 ---
 
 ## 2. Daten-Pins (PORTA für maximale Geschwindigkeit)
 
-| EPROM Pin | Name | Arduino Mega Pin |
+| EPROM Pin | Chip-Label | Arduino Mega Pin |
 | :--- | :--- | :--- |
 | 13 | **Q0** | Digital `22` |
 | 14 | **Q1** | Digital `23` |
@@ -107,13 +123,13 @@ https://www.datasheet-pdf.info/entry/M27C4001
 | 20 | **Q6** | Digital `28` |
 | 21 | **Q7** | Digital `29` |
 
-![Pinout_M27C4001](images/M27C4001.png) 
+![Pinout_M27C4001](images/M27C4001.png)
 
 ---
 
 ## 3. Adress-Pins
 
-| EPROM Pin | Name | Arduino Mega Pin |
+| EPROM Pin | Chip-Label | Arduino Mega Pin |
 | :--- | :--- | :--- |
 | 12 | **A0** | Digital `30` |
 | 11 | **A1** | Digital `31` |
@@ -135,45 +151,110 @@ https://www.datasheet-pdf.info/entry/M27C4001
 | 30 | **A17** | Digital `47` |
 | 31 | **A18** | Digital `48` |
 
-![Pinout_M27C4001](images/M27C4001.png) 
+![Pinout_M27C4001](images/M27C4001.png)
 
 ---
 
 ## 4. Steuer-Pins
 
-| EPROM Pin | Name | Arduino Mega Pin | Funktion |
+| EPROM Pin | Chip-Label | Bedeutung | Arduino Mega Pin |
 | :--- | :--- | :--- | :--- |
-| 22 | **CE** | Digital `50` | Chip Enable (Aktiv LOW) |
-| 24 | **OE** | Digital `51` | Output Enable (Aktiv LOW) |
-| - | **VPP_EN**| Digital `52` | **Steuert deine VPP Transistor-Schaltung** |
+| 22 | **Ē** (im Bild als "E" mit Überstrich) | Chip Enable (Aktiv LOW) | Digital `50` |
+| 24 | **Ḡ** (im Bild als "G" mit Überstrich) | Output Enable (Aktiv LOW) | Digital `51` |
+| - | *(kein EPROM-Pin, externe Steuerlogik)* | VPP_EN — steuert deine VPP-Transistor-Schaltung | Digital `52` |
+| - | *(kein EPROM-Pin, externe Steuerlogik)* | VCC_EN — steuert deine VCC-Umschaltung 5V ↔ 6,25V | Digital `53` |
 
-![Pinout_M27C4001](images/M27C4001.png) 
+![Pinout_M27C4001](images/M27C4001.png)
+
+> **Zur Klarstellung:** Auf dem Chip-Gehäuse selbst sind nur `Ē` (Pin 22) und `Ḡ` (Pin 24) aufgedruckt — "CE" und "OE" sind nur die gebräuchlichen Namen dafür in Datenblättern/Schaltplänen, keine eigenen Chip-Labels. `VPP_EN` und `VCC_EN` sind keine EPROM-Pins, sondern nur die Bezeichnungen, die *du* für die beiden Steuerleitungen zu deinen Transistor-Schaltungen vergibst.
+
+> **Hinweis SPI:** Digital 50–53 sind auf dem Mega gleichzeitig die Hardware-SPI-Pins (MISO/MOSI/SCK/SS). Solange du kein weiteres SPI-Gerät (z. B. SD-Karten-Modul) parallel nutzt, ist das unproblematisch.
 
 ---
 
-## 5. Die 12,5V VPP Transistor-Schaltung (High-Side Switch)
+## 5. Die 12,75V VPP Transistor-Schaltung (High-Side Switch)
 
-Um die 12,5V blitzschnell und sicher ein- und auszuschalten, musst du eine kleine Schaltung auf dem Breadboard aufbauen. Der Arduino-Pin 52 steuert diese Schaltung.
+Um die 12,75V schnell und sicher ein- und auszuschalten, baust du eine kleine Schaltung auf dem Breadboard auf. Arduino-Pin 52 steuert diese Schaltung.
+
+**Aus deinem vorhandenen Bauteil-Sortiment verwenden wir hier: NPN = `BC337`, PNP = `BC327`.**
+Beide sind für bis zu 45V / 800mA spezifiziert — bei nur 12,75V und wenigen mA Laststrom (IPP max. 50mA laut Datenblatt) ist das mehr als ausreichend Reserve.
 
 ### Benötigte Bauteile:
-* 1x externes DC-Netzteil (exakt **12,0V bis 12,5V**)
-* 1x NPN-Transistor (z. B. 2N3904, BC547)
-* 1x PNP-Transistor (z. B. 2N3906, BC557)
+* 1x externes DC-Netzteil (exakt **12,75V ± 0,25V**, einstellbar)
+* 1x **BC337** (NPN)
+* 1x **BC327** (PNP)
 * 2x 1kΩ Widerstand
 * 1x 10kΩ Widerstand
-* 1x Standard-Diode (z. B. 1N4148 oder 1N4007)
+* 1x Schottky-Diode (z. B. 1N5819) — *statt Standard-Silizium-Diode, siehe Begründung unten*
+
+> **Pinout BC337 / BC327 (TO-92):** Flache Seite zu dir, Beinchen nach unten → von links nach rechts **C – B – E** (Kollektor – Basis – Emitter). Das ist bei beiden identisch, nur die Stromrichtung (NPN vs. PNP) unterscheidet sich. Achtung: Das ist eine andere Pin-Reihenfolge als z. B. bei 2N3904/2N3906 (dort EBC) — beim Verdrahten also nicht verwechseln.
 
 ### Aufbau der Schaltung:
 
-1. **Gemeinsame Masse:** Verbinde den Minus-Pol (GND) deines 12,5V-Netzteils zwingend mit dem GND des Arduinos.
-2. **Der Steuereingang:** Verbinde Arduino **Pin 52** über einen **1kΩ Widerstand** mit der Basis (B) des **NPN**-Transistors.
-3. **NPN Masse:** Verbinde den Emitter (E) des **NPN**-Transistors mit **GND**.
-4. **Verbindung der Transistoren:** Verbinde den Kollektor (C) des **NPN**-Transistors über den zweiten **1kΩ Widerstand** mit der Basis (B) des **PNP**-Transistors.
-5. **Der 12,5V Eingang:** Verbinde den Emitter (E) des **PNP**-Transistors mit dem Plus-Pol (**12,5V**) deines Netzteils.
-6. **Pull-Up für Sicherheit:** Setze den **10kΩ Widerstand** zwischen den Emitter (12,5V) und die Basis (B) des **PNP**-Transistors (das hält ihn standardmäßig sicher abgeschaltet).
-7. **Der VPP Ausgang:** Der Kollektor (C) des **PNP**-Transistors geht direkt an **Pin 1 (VPP)** des EPROMs.
+1. **Gemeinsame Masse:** Verbinde den Minus-Pol (GND) deines 12,75V-Netzteils zwingend mit dem GND des Arduinos.
+2. **Der Steuereingang:** Verbinde Arduino **Pin 52** über einen **1kΩ Widerstand** mit der **Basis (mittleres Bein)** des **BC337**.
+3. **NPN Masse:** Verbinde den **Emitter (rechtes Bein)** des **BC337** mit **GND**.
+4. **Verbindung der Transistoren:** Verbinde den **Kollektor (linkes Bein)** des **BC337** über den zweiten **1kΩ Widerstand** mit der **Basis (mittleres Bein)** des **BC327**.
+5. **Der 12,75V Eingang:** Verbinde den **Emitter (rechtes Bein)** des **BC327** mit dem Plus-Pol (**12,75V**) deines Netzteils.
+6. **Pull-Up für Sicherheit:** Setze den **10kΩ Widerstand** zwischen den Emitter (12,75V) und die Basis des **BC327** (hält ihn standardmäßig sicher abgeschaltet).
+7. **Der VPP Ausgang:** Der **Kollektor (linkes Bein)** des **BC327** geht direkt an **Pin 1 (Chip-Label `VPP`)** des EPROMs.
 
 ### Der Dioden-Trick (Für das Auslesen):
-Das EPROM verlangt, dass am VPP-Pin während des reinen Auslesens 5V anliegen. 
-* Setze die **Diode** so ein, dass der Strom vom **5V-Pin des Arduinos** zum **Pin 1 (VPP) des EPROMs** fließen kann (der silberne Strich der Diode zeigt zum EPROM). 
-* **Warum?** So bekommt der VPP-Pin standardmäßig fast 5V zum Lesen. Wenn der Arduino Pin 52 auf HIGH setzt und die vollen 12,5V aus deiner Schaltung auf den EPROM-Pin schießen, blockiert die Diode diese Spannung rückwärts und schützt deinen Arduino vor dem Durchschmoren.
+Das EPROM verlangt, dass am VPP-Pin während des reinen Auslesens VPP = VCC anliegt.
+* Setze die **Schottky-Diode** so ein, dass der Strom vom **VCC-Pin des EPROMs** zum **VPP-Pin des EPROMs** fließen kann (der Ring/Strich der Diode zeigt zum EPROM-VPP-Pin).
+* **Warum Schottky statt Standarddiode?** Eine normale Silizium-Diode (1N4148/1N4007) hat ca. 0,6–0,7V Flussspannung – dann läge VPP beim Lesen nur bei ca. 4,3–4,4V statt der geforderten ~5V (VPP = VCC). Eine Schottky-Diode hat nur ca. 0,2–0,3V Abfall und liegt damit deutlich näher an der Spezifikation.
+* **Wichtig:** Die Diode muss vom **VCC-Pin** des EPROMs abgehen, nicht fest vom 5V-Arduino-Pin — da VCC bei dir jetzt schaltbar zwischen 5V und 6,25V ist (siehe Abschnitt 6), folgt VPP beim Lesen automatisch dem aktuellen VCC-Pegel.
+* Wenn Arduino Pin 52 auf HIGH schaltet und die vollen 12,75V aus der Transistor-Schaltung auf VPP treiben, sperrt die Diode in Rückwärtsrichtung und schützt den Rest der Schaltung.
+
+---
+
+## 6. Die VCC-Umschaltung (5V ↔ 6,25V)
+
+Damit VCC im Programmiermodus auf 6,25V angehoben werden kann, baust du eine zweite High-Side-Switch-Schaltung auf — nach demselben Prinzip wie die VPP-Schaltung in Abschnitt 5, aber mit einem anderen Transistorpaar aus deinem Bestand, damit du die beiden Schaltungen auf dem Breadboard nicht verwechselst:
+
+**Für die VCC-Schaltung verwenden wir: NPN = `S8050`, PNP = `S8550`.**
+
+> **Pinout S8050 / S8550 (TO-92):** Flache Seite zu dir, Beinchen nach unten → von links nach rechts **E – B – C** (Emitter – Basis – Kollektor). Achtung: Das ist die *umgekehrte* Reihenfolge zu BC337/BC327 (dort CBE) — die beiden Schaltungen sehen auf dem Breadboard also unterschiedlich verdrahtet aus, obwohl sie funktional identisch sind.
+
+### Aufbau:
+
+Du brauchst dafür eine **zweite Spannungsquelle mit 6,25V** (z. B. ein zweites Netzteil oder ein mit LM317 auf 6,25V eingestellter Regler). Das normale 5V des Arduinos bleibt als Standard-VCC bestehen; die 6,25V werden nur während des Programmierens dazugeschaltet.
+
+1. **Gemeinsame Masse:** GND der 6,25V-Quelle mit GND des Arduinos verbinden.
+2. **Steuereingang:** Arduino **Pin 53** über einen **1kΩ Widerstand** an die **Basis (mittleres Bein)** des **S8050**.
+3. **NPN Masse:** **Emitter (linkes Bein)** des S8050 an GND.
+4. **Verbindung:** **Kollektor (rechtes Bein)** des S8050 über einen zweiten **1kΩ Widerstand** an die **Basis (mittleres Bein)** des **S8550**.
+5. **6,25V-Eingang:** **Emitter (linkes Bein)** des S8550 an den Plus-Pol der 6,25V-Quelle.
+6. **Pull-Up:** **10kΩ Widerstand** zwischen 6,25V-Plus und Basis des S8550 (Schaltung ist im Ruhezustand sicher aus).
+7. **Ausgang:** **Kollektor (rechtes Bein)** des S8550 geht auf den **VCC-Pin (Pin 32, Chip-Label `VCC`) des EPROMs**.
+8. **5V als Grundversorgung:** Der 5V-Arduino-Pin bleibt zusätzlich fest mit dem VCC-Pin des EPROMs verbunden (über eine **Schottky-Diode**, Durchlassrichtung zum EPROM hin) — genau wie beim VPP-Dioden-Trick in Abschnitt 5. Das sorgt dafür, dass VCC im Ruhezustand (Lesen) bei ~5V liegt, und beim Zuschalten der 6,25V blockiert die Diode ein Rückfließen in den 5V-Arduino-Pin.
+
+**Wichtig für die Sequenz:** Dein Sketch muss VCC **immer zuerst** auf 6,25V bringen (Pin 53 HIGH), **bevor** VPP auf 12,75V geschaltet wird (Pin 52 HIGH) — und beim Beenden umgekehrt: erst VPP auf 0 (Pin 52 LOW), dann VCC zurück auf 5V (Pin 53 LOW).
+
+### Restliche Bauteile aus deinem Bestand (Reserve / Alternativen)
+
+Falls du BC337/BC327 oder S8050/S8550 mal ersetzen musst, hier die Pinouts der übrigen Transistoren aus deiner Liste — **Achtung, teils unterschiedliche Pin-Reihenfolge**, immer vor dem Einlöten prüfen:
+
+| Typ | Polarität | TO-92 Pinout (flache Seite zu dir, Beine unten, links→rechts) |
+| :--- | :--- | :--- |
+| 2N3904 | NPN | E – B – C |
+| 2N2222 | NPN | E – B – C |
+| C1815 | NPN | E – C – B |
+| A1015 | PNP | E – C – B |
+| 2N2907 | PNP | E – B – C |
+| 2N3908* | PNP | *vermutlich 2N3906 gemeint (EBC) — Aufdruck am Bauteil prüfen, „2N3908" ist keine gängige Standardbezeichnung* |
+
+*C1815/A1015 haben zudem nur max. 150mA Kollektorstrom — für diese Schaltung (wenige mA) trotzdem problemlos ausreichend, aber als Hauptschalter etwas knapper dimensioniert als BC337/BC327.*
+
+---
+
+## Zusammenfassung der Korrekturen gegenüber der ursprünglichen Version
+
+- VPP-Sollwert korrigiert: **12,75V** statt 12,5V (M27C4001-Datenblattwert)
+- **VCC muss beim Schreiben auf 6,25V** angehoben werden — vorher fehlte das komplett
+- Neuer Pin `53` für **VCC_EN** (Umschaltung 5V/6,25V) ergänzt
+- **Power-Sequencing-Regel** ergänzt (VCC vor VPP an, VPP vor VCC aus)
+- Standarddiode durch **Schottky-Diode** ersetzt, damit VPP beim Lesen näher an VCC liegt
+- Hinweis zu SPI-Pin-Kollision (D50–53) auf dem Mega ergänzt
+- Beide High-Side-Switch-Schaltungen (VPP und VCC) auf konkrete vorhandene Bauteile umgestellt: **BC337/BC327** für VPP, **S8050/S8550** für VCC — inkl. korrekter Pinout-Angaben (CBE bzw. EBC), da diese sich unterscheiden
+- **Alle Tabellen um eine "Chip-Label"-Spalte ergänzt**, die exakt die Beschriftung aus dem Pinout-Diagramm zeigt (z. B. `VSS` statt "GND" bei Pin 16), damit physische Pin-Nummer und Chip-Beschriftung nicht mehr verwechselt werden können
