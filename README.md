@@ -218,6 +218,14 @@ Damit VCC im Programmiermodus auf 6,25V angehoben werden kann, baust du eine zwe
 
 > **Pinout S8050 / S8550 (TO-92):** Flache Seite zu dir, Beinchen nach unten → von links nach rechts **E – B – C** (Emitter – Basis – Kollektor). Achtung: Das ist die *umgekehrte* Reihenfolge zu BC337/BC327 (dort CBE) — die beiden Schaltungen sehen auf dem Breadboard also unterschiedlich verdrahtet aus, obwohl sie funktional identisch sind.
 
+### Benötigte Bauteile:
+* 1x zweite Spannungsquelle (exakt **6,25V ± 0,25V**, einstellbar)
+* 1x **S8050** (NPN)
+* 1x **S8550** (PNP)
+* 2x 1kΩ Widerstand
+* 1x 10kΩ Widerstand
+* 1x **zweite Schottky-Diode** (z. B. 1N5819) — *zwingend erforderlich, siehe Punkt 8 unten, sonst bleibt VCC im Lesemodus stromlos!*
+
 ### Aufbau:
 
 Du brauchst dafür eine **zweite Spannungsquelle mit 6,25V** (z. B. ein zweites Netzteil oder ein mit LM317 auf 6,25V eingestellter Regler). Das normale 5V des Arduinos bleibt als Standard-VCC bestehen; die 6,25V werden nur während des Programmierens dazugeschaltet.
@@ -229,7 +237,11 @@ Du brauchst dafür eine **zweite Spannungsquelle mit 6,25V** (z. B. ein zweites 
 5. **6,25V-Eingang:** **Emitter (linkes Bein)** des S8550 an den Plus-Pol der 6,25V-Quelle.
 6. **Pull-Up:** **10kΩ Widerstand** zwischen 6,25V-Plus und Basis des S8550 (Schaltung ist im Ruhezustand sicher aus).
 7. **Ausgang:** **Kollektor (rechtes Bein)** des S8550 geht auf den **VCC-Pin (Pin 32, Chip-Label `VCC`) des EPROMs**.
-8. **5V als Grundversorgung:** Der 5V-Arduino-Pin bleibt zusätzlich fest mit dem VCC-Pin des EPROMs verbunden (über eine **Schottky-Diode**, Durchlassrichtung zum EPROM hin) — genau wie beim VPP-Dioden-Trick in Abschnitt 5. Das sorgt dafür, dass VCC im Ruhezustand (Lesen) bei ~5V liegt, und beim Zuschalten der 6,25V blockiert die Diode ein Rückfließen in den 5V-Arduino-Pin.
+8. ⚠️ **5V-Grundversorgung (zwingend erforderlich, nicht optional!):** Verbinde eine **zweite Schottky-Diode** (z. B. 1N5819) zwischen dem 5V-Arduino-Pin und dem VCC-Pin des EPROMs — genau wie beim VPP-Dioden-Trick in Abschnitt 5:
+   * **Anode** (Ende ohne Ring) → **5V-Pin des Arduino Mega**
+   * **Kathode** (Ende mit Ring) → **Pin 32 (VCC) des EPROMs**, also an denselben Knoten, an dem auch der Kollektor des S8550 ankommt.
+
+> **Warum ist diese Diode nötig?** Solange Arduino-Pin 53 im Lesemodus `LOW` ist, sperrt der PNP-Transistor S8550 komplett — er lässt die 6,25V nicht durch. Ohne diese Diode bekommt Pin 32 des EPROMs beim Lesen **0 Volt**, der Chip ist stromlos und zieht alle Datenleitungen wie ein "totes Bauteil" auf Masse (Auslesen liefert dann nur `00`-Bytes). Mit der Diode fließen im Ruhezustand ca. 4,7V vom Arduino-5V-Pin zum EPROM-VCC — genug zum Lesen. Beim Schreiben schaltet der S8550 die vollen 6,25V auf VCC; die Diode sperrt dann automatisch rückwärts, sodass die 6,25V nicht in den 5V-Pin des Arduinos zurückfließen und ihn beschädigen können.
 
 **Wichtig für die Sequenz:** Dein Sketch muss VCC **immer zuerst** auf 6,25V bringen (Pin 53 HIGH), **bevor** VPP auf 12,75V geschaltet wird (Pin 52 HIGH) — und beim Beenden umgekehrt: erst VPP auf 0 (Pin 52 LOW), dann VCC zurück auf 5V (Pin 53 LOW).
 
@@ -262,3 +274,112 @@ Falls du BC337/BC327 oder S8050/S8550 mal ersetzen musst, hier die Pinouts der �
 - Hinweis zu SPI-Pin-Kollision (D50–53) auf dem Mega ergänzt
 - Beide High-Side-Switch-Schaltungen (VPP und VCC) auf konkrete vorhandene Bauteile umgestellt: **BC337/BC327** für VPP, **S8050/S8550** für VCC — inkl. korrekter Pinout-Angaben (CBE bzw. EBC), da diese sich unterscheiden
 - **Alle Tabellen um eine "Chip-Label"-Spalte ergänzt**, die exakt die Beschriftung aus dem Pinout-Diagramm zeigt (z. B. `VSS` statt "GND" bei Pin 16), damit physische Pin-Nummer und Chip-Beschriftung nicht mehr verwechselt werden können
+- ⚠️ **Zweite Schottky-Diode (5V-Arduino-Pin → EPROM VCC Pin 32) als zwingend erforderliches Bauteil ergänzt** — ohne sie ist der EPROM-Chip im Lesemodus komplett stromlos (VCC = 0V, da der S8550 bei Pin 53 = LOW sperrt), wodurch alle Datenleitungen auf Masse gezogen werden und nur Nullen ausgelesen werden. Mit der Diode liegen im Lesemodus ~4,7V an VCC an — der bestätigte Fix, der das Auslesen zum Laufen gebracht hat.
+
+
+# EpromProgrammer GUI unter Windows (WSL1 & VNC-Browser-Methode)
+
+Diese Anleitung beschreibt, wie die Linux-basierte Qt5-GUI des EpromProgrammers nativ unter Windows ausgeführt werden kann, ohne dass der C++-Code umgeschrieben oder ein externer X-Server (wie XLaunch/VcXsrv) installiert werden muss.
+
+Wir nutzen **WSL1** (Windows Subsystem for Linux) in Kombination mit dem Qt-internen VNC-Server und `noVNC`, um die grafische Oberfläche direkt im Webbrowser (Chrome, Edge, Firefox) anzuzeigen.
+
+---
+
+## 🛠️ 1. Voraussetzungen & Installation
+
+Öffne ein WSL-Terminal (z. B. Ubuntu 20.04 via VS Code) und installiere die benötigten Compiler, Bibliotheken und VNC-Tools:
+
+```bash
+sudo apt update
+sudo apt install build-essential cmake git
+sudo apt install libqt5widgets5 libqt5gui5 libqt5core5a qtwayland5
+sudo apt install novnc websockify
+```
+
+⚠️ **Wichtiger Bugfix für WSL1 (Ubuntu 20.04):** WSL1 hat ein Problem mit der Komprimierung der Qt5Core-Bibliothek. Damit das Programm startet, muss ein inkompatibler Tag entfernt werden:
+
+```bash
+sudo strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5
+```
+
+---
+
+## 🏗️ 2. Kompilieren (Build)
+
+Lade den Code herunter, wechsle in das Verzeichnis und starte den Build-Prozess mit CMake:
+
+```bash
+# In den GUI-Ordner wechseln
+cd /Pfad/zu/deinem/EpromProgrammer/gui
+
+# Build-Ordner erstellen und vorbereiten
+mkdir build
+cd build
+cmake ..
+
+# Programm kompilieren
+make
+```
+
+Das ausführbare Programm `EpQt` befindet sich nun im `build`-Ordner.
+
+---
+
+## 🚀 3. Programm starten (Browser-Methode)
+
+Da WSL1 keinen eigenen Monitor hat, lassen wir das Programm als unsichtbaren Server laufen und greifen das Bild über den Browser ab.
+
+### Schritt 1: GUI im VNC-Modus starten (Terminal 1)
+
+Bleibe im `build`-Ordner und starte die GUI als VNC-Server. (Das Terminal bleibt danach scheinbar stehen – das ist korrekt so!)
+
+```bash
+./EpQt -platform vnc
+```
+
+### Schritt 2: Web-Brücke starten (Terminal 2)
+
+Öffne ein zweites Terminal-Fenster und starte `websockify`. Dieser Dienst übersetzt das VNC-Signal (Port 5900) für deinen Webbrowser (Port 8080):
+
+```bash
+websockify --web=/usr/share/novnc/ 8080 localhost:5900
+```
+
+### Schritt 3: GUI im Browser öffnen
+
+Öffne in Windows deinen Webbrowser und rufe folgende Adresse auf:
+
+👉 `http://localhost:8080/vnc.html`
+
+Klicke auf **Connect** – die grafische Oberfläche des EpromProgrammers erscheint nun in deinem Browser!
+
+---
+
+## 🔌 4. Arduino / COM-Port verbinden
+
+In WSL1 werden die COM-Ports von Windows exakt 1:1 auf Linux-Ports gemappt:
+
+| Windows | Linux (WSL1) |
+|---------|--------------|
+| COM1    | `/dev/ttyS1` |
+| COM9    | `/dev/ttyS9` |
+
+### COM-Port prüfen (WSL1-Trick)
+
+Da du WSL1 nutzt, hast du direkten Zugriff auf Windows-Befehle. Du kannst dir die aktiven COM-Ports ganz einfach anzeigen lassen, indem du dieses alte DOS-Kommando direkt in dein Linux-Terminal eintippst:
+
+```bash
+mode.com
+```
+
+Dieser Befehl listet alle aktuell unter Windows aktiven seriellen Schnittstellen auf (z. B. `Status von Gerät COM9:`). Wenn `COM9` dort auftaucht, weißt du sicher, dass er da ist und in Linux als `/dev/ttyS9` angesprochen werden kann.
+
+### Rechte setzen
+
+Falls die GUI beim Verbinden meldet, dass sie keine Berechtigung hat, musst du dem Port einmalig Lese- und Schreibrechte geben (Beispiel für COM9):
+
+```bash
+sudo chmod 666 /dev/ttyS9
+```
+
+Wähle danach einfach `/dev/ttyS9` in der GUI aus und klicke auf **Connect**. Das Terminal-Log sollte nun `Connected to eprom programmer.` anzeigen.
