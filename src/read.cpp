@@ -50,7 +50,7 @@ void EndReadData(void)
 }
 //------------------------------------------------------------------------------
 
-void ReadEprom(void)
+/*void ReadEprom(void)
 {
   extern uint32_t EpromEndAddress;
   extern uint8_t *SerialBuffer;
@@ -76,5 +76,59 @@ void ReadEprom(void)
   }
   
   EndReadData();
+}*/
+void ReadEprom(void)
+{
+  extern uint32_t EpromEndAddress;
+  
+  StartReadData();
+  delay(10);
+  
+  for(uint32_t i = 0; i < EpromEndAddress; i++)
+  {
+    uint8_t registerOne, registerTwo, registerThree;
+    
+    GenerateAddress(i, &registerOne, &registerTwo, &registerThree);
+    SetAddress(registerOne, registerTwo, registerThree);
+    
+    uint8_t data = ReadDataByte();
+    
+    // Gibt die Daten als sauberen Text aus (z.B. "0A" oder "FF")
+    if(data < 0x10) Serial.print("0");
+    Serial.print(data, HEX);
+    
+    // Nach 32 Bytes einen Zeilenumbruch machen, sonst Leerzeichen
+    if((i + 1) % 32 == 0) {
+      Serial.println();
+    } else {
+      Serial.print(" ");
+    }
+  }
+  
+  EndReadData();
 }
+
+/*void ReadEprom(void)
+{
+  extern uint32_t EpromEndAddress;
+  
+  StartReadData();
+  delay(10);
+  
+  for(uint32_t i = 0; i < EpromEndAddress; i++)
+  {
+    uint8_t registerOne, registerTwo, registerThree;
+    
+    GenerateAddress(i, &registerOne, &registerTwo, &registerThree);
+    SetAddress(registerOne, registerTwo, registerThree);
+    
+    uint8_t data = ReadDataByte();
+    
+    // Sende IMMER exakt 2 Zeichen als Hex-Text (z.B. "0A" oder "FF") ohne Leerzeichen
+    if(data < 0x10) Serial.print("0");
+    Serial.print(data, HEX);
+  }
+  
+  EndReadData();
+}*/
 //------------------------------------------------------------------------------

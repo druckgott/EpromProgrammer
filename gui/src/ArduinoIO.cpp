@@ -44,6 +44,7 @@ void ArduinoIO::ResetVariables(void)
     maxBufferSize = 0;
     readBuffer.clear();
     writeBuffer.clear();
+    textBuffer.clear(); // NEU
     programmingAlghoritm = PRG_ALGO::STANDARD;
 }
 //----------------------------------------------------------------------
@@ -202,7 +203,8 @@ void ArduinoIO::ReadEpromSlot(void)
         {
             readData.remove(0, index + str.length());
             
-            readBuffer.append(readData);
+            //readBuffer.append(readData);
+            ProcessIncomingReadData(readData);
             
             //uint8_t *dataRead = reinterpret_cast<uint8_t *>(readBuffer.data());
             if(readBuffer.length() > 0) {
@@ -217,7 +219,8 @@ void ArduinoIO::ReadEpromSlot(void)
             {
                 readData = serialPort->readAll();
                 
-                readBuffer.append(readData);
+                //readBuffer.append(readData);
+                ProcessIncomingReadData(readData);
                 emit ReadBlockSignal(readBuffer.length());
                 if(readBuffer.length() - lastReadBufferLength > 0) {
                     emit ReadEpromDataSignal(lastReadBufferLength, readBuffer.length() - lastReadBufferLength, reinterpret_cast<uint8_t *>(readBuffer.data()));
@@ -497,3 +500,27 @@ QString ArduinoIO::CleanErrorMessage(QByteArray errorMessage)
     return message;
 }
 //----------------------------------------------------------------------
+
+void ArduinoIO::SetWslMode(bool mode) {
+    wslMode = mode;
+    textBuffer.clear();
+}
+
+void ArduinoIO::ProcessIncomingReadData(QByteArray &new_data) {
+    if(wslMode) {
+        textBuffer.append(new_data);
+        // Immer wenn wir 2 Zeichen haben (z.B. "FF"), wandeln wir sie in 1 echtes Byte um
+        while(textBuffer.length() >= 2) {
+            QString hexPair = textBuffer.left(2);
+            textBuffer.remove(0, 2);
+            bool ok;
+            char b = (char)hexPair.toInt(&ok, 16);
+            if(ok) {
+                readBuffer.append(b);
+            }
+        }
+    } else {
+        // Original Linux Verhalten: Rohdaten direkt übernehmen
+        readBuffer.append(new_data);
+    }
+}

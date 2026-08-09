@@ -276,7 +276,6 @@ Falls du BC337/BC327 oder S8050/S8550 mal ersetzen musst, hier die Pinouts der �
 - **Alle Tabellen um eine "Chip-Label"-Spalte ergänzt**, die exakt die Beschriftung aus dem Pinout-Diagramm zeigt (z. B. `VSS` statt "GND" bei Pin 16), damit physische Pin-Nummer und Chip-Beschriftung nicht mehr verwechselt werden können
 - ⚠️ **Zweite Schottky-Diode (5V-Arduino-Pin → EPROM VCC Pin 32) als zwingend erforderliches Bauteil ergänzt** — ohne sie ist der EPROM-Chip im Lesemodus komplett stromlos (VCC = 0V, da der S8550 bei Pin 53 = LOW sperrt), wodurch alle Datenleitungen auf Masse gezogen werden und nur Nullen ausgelesen werden. Mit der Diode liegen im Lesemodus ~4,7V an VCC an — der bestätigte Fix, der das Auslesen zum Laufen gebracht hat.
 
-
 # EpromProgrammer GUI unter Windows (WSL1 & VNC-Browser-Methode)
 
 Diese Anleitung beschreibt, wie die Linux-basierte Qt5-GUI des EpromProgrammers nativ unter Windows ausgeführt werden kann, ohne dass der C++-Code umgeschrieben oder ein externer X-Server (wie XLaunch/VcXsrv) installiert werden muss.
@@ -383,3 +382,30 @@ sudo chmod 666 /dev/ttyS9
 ```
 
 Wähle danach einfach `/dev/ttyS9` in der GUI aus und klicke auf **Connect**. Das Terminal-Log sollte nun `Connected to eprom programmer.` anzeigen.
+
+---
+
+## 🩹 5. Troubleshooting: Programm hängt beim Auslesen (CH340-Problem)
+
+Wenn das Auslesen eines EPROMs mitten im Vorgang stehen bleibt (z. B. hängt der Fortschritt an einer bestimmten Adresse wie `17EC0` und geht einfach nicht mehr weiter), liegt das erfahrungsgemäß **nicht** an der GUI, sondern am Windows-Treiber des CH340-USB-Chips, der auf vielen Arduino-Nano-Klonen verbaut ist.
+
+**Ursache:** Windows legt für den CH340 standardmäßig große FIFO-Puffer an (im Gerätemanager meist auf `High (14)` bzw. `High (16)` voreingestellt). Windows schaufelt dadurch möglichst viele Daten auf einmal in den winzigen Hardware-Zwischenspeicher des Chips. Da WSL1 die Daten aber nicht in Echtzeit schnell genug abholt, läuft dieser Hardware-Puffer voll, und der Chip bricht die Übertragung hart ab — genau das äußert sich als "Hängenbleiben" beim Lesen.
+
+### Lösung: FIFO-Puffer im Windows-Gerätetreiber deaktivieren
+
+1. Öffne den **Windows Gerätemanager**.
+2. Suche unter *Anschlüsse (COM & LPT)* den entsprechenden CH340-Port (z. B. `USB-SERIAL CH340 (COM9)`), Rechtsklick → **Eigenschaften**.
+3. Wechsle zum Reiter **Anschlusseinstellungen** und klicke dort auf **Erweitert...** (*Advanced...*).
+4. Im sich öffnenden Fenster siehst du die Option **Use FIFO buffers** mit zwei Reglern (Receive/Transmit), die standardmäßig auf `High (14)` / `High (16)` stehen.
+5. **Nimm den Haken bei "Use FIFO buffers" komplett heraus** — alternativ kannst du testweise stattdessen beide Regler ganz nach links auf `Low (1)` schieben.
+6. Klicke in beiden Fenstern auf **OK**, um die Einstellungen zu speichern.
+7. Trenne den Arduino kurz vom USB-Port, stecke ihn wieder ein und starte in der GUI einen neuen Leseversuch.
+
+### Falls das Problem trotzdem bestehen bleibt
+
+Sollte WSL1 die rohen Binärdaten danach immer noch blockieren, ist der Windows-Treiber an dieser Stelle ein praktisch unüberwindbarer Flaschenhals. In diesem Fall bleibt als stressfreier Ausweg nur der Umbau der `read.cpp` auf reinen Hex-Text-Output, um das EPROM zuverlässig und vollständig auslesen zu können.
+
+
+### INFO
+
+![CHIP](images/chip.png)

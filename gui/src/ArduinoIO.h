@@ -63,7 +63,10 @@ private:
     void ResetVariables(void);
     int WaitForReadyRead(int timeout);
     QString CleanErrorMessage(QByteArray errorMessage);
-    
+    bool wslMode = false;
+    QByteArray textBuffer;
+    void ProcessIncomingReadData(QByteArray &new_data);
+
 private slots:    
     void SelectEpromSlot(void);
     void ReadVoltageSlot(void);
@@ -84,6 +87,7 @@ public:
     void ReadEprom(void);
     void HardwareTest(void);
     void WriteEprom(double vcc, double vpp, PRG_ALGO algo);
+    void SetWslMode(bool mode);
     
 signals:
     void SerialOperationStartSignal(void);

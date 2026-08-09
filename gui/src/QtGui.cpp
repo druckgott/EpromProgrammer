@@ -148,7 +148,12 @@ QToolBar *QtGui::CreateToolbar(void)
     connect(hardwareTestAction, SIGNAL(triggered()), this, SLOT(HardwareTestSlot()));
     hardwareTestAction->setEnabled(false);
     mainToobar->addAction(hardwareTestAction);
-    
+
+    wslModeAction = new QAction(QIcon::fromTheme("emblem-system"), "WSL Fix", NULL);
+    wslModeAction->setCheckable(true);
+    wslModeAction->setChecked(true); // Ist ab sofort standardmäßig aktiviert
+    mainToobar->addAction(wslModeAction);
+
     readVoltageAction = new QAction(QIcon::fromTheme("battery"), "Read Voltage", NULL);
     connect(readVoltageAction, SIGNAL(triggered()), this, SLOT(ShowVoltageSlot()));
     readVoltageAction->setEnabled(false);
@@ -917,6 +922,7 @@ void QtGui::ReadEpromSlot(void)
     
     operationTimer.start();
     
+    arduinoIO->SetWslMode(wslModeAction->isChecked());
     arduinoIO->ReadEprom();
 }
 //----------------------------------------------------------------------
@@ -1194,6 +1200,7 @@ void QtGui::ReReadEpromSlot(void)
     updateReadDataConnection = QObject::connect(arduinoIO, SIGNAL(ReadEpromDataSignal(int, int, uint8_t *)), this, SLOT(ReadEpromDataSlot(int, int, uint8_t *)));
     checkEpromClearConnection = QObject::connect(arduinoIO, SIGNAL(ReadCompleteSignal()), this, SLOT(ContinueVerifyDataSlot()));
     
+    arduinoIO->SetWslMode(wslModeAction->isChecked());
     arduinoIO->ReadEprom();
 }
 //----------------------------------------------------------------------

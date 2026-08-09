@@ -115,6 +115,7 @@ private:
     QAction *hardwareTestAction;
     QAction *readVoltageAction;
     QAction *showHelpAction;
+    QAction *wslModeAction;
     
     QMetaObject::Connection serialOperationStartConnection;
     QMetaObject::Connection serialOperationErrorConnection;
