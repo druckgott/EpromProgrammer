@@ -29,6 +29,7 @@ void SetDataMode(bool write);
 void SetAddress(uint8_t registerOne, uint8_t registerTwo, uint8_t registerThree);
 void SetVppOff(void);
 void SetVppOn(uint8_t vppPin);
+void SetVccProgram(bool on);
 void InitializeEpromToAKnownState(void);
 void SelectEprom(EPROM_TYPE newEprom);
 void GenerateAddress(uint32_t address, uint8_t *registerOne, uint8_t *registerTwo, uint8_t *registerThree);

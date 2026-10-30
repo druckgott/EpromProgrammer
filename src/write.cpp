@@ -253,6 +253,7 @@ bool WriteFastBlock(uint32_t i)
     
     for(uint8_t k = 1; k <= 10; k++)
     {
+      SetVccProgram(true);
       SetVppOn(EpromVppPin);
 
       WriteDataByte(SerialBuffer[j]);
@@ -260,9 +261,11 @@ bool WriteFastBlock(uint32_t i)
       digitalWrite(NCE_PIN, LOW);
       delayMicroseconds(110);
       digitalWrite(NCE_PIN, HIGH);
-      
+
       SetVppOff();
-      
+      // Verify bei 5V, sonst treibt das EPROM Q0-Q7 mit 6,25V in die Mega-Pins
+      SetVccProgram(false);
+
       // Verify byte
       uint8_t verify = VerifyData();
       

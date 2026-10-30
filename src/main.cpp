@@ -56,6 +56,7 @@ void setup()
   pinMode(NCE_PIN, OUTPUT);
   pinMode(NOE_PIN, OUTPUT);
   pinMode(VPP_EN_PIN, OUTPUT); // Unser neuer 12.5V Schalter
+  pinMode(VCC_EN_PIN, OUTPUT); // 5V <-> 6,25V Umschaltung
   
   InitializeEpromToAKnownState();
 

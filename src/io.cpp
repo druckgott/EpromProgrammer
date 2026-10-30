@@ -124,6 +124,18 @@ void SetVppOn(uint8_t vppPin)
   digitalWrite(VPP_EN_PIN, HIGH); // Schaltet deine 12.5V ein
 }
 //------------------------------------------------------------------------------
+// VCC auf Programmierspannung schalten, nur wenn > 5,5V angefordert.
+// Reihenfolge laut Datenblatt: VCC vor VPP an, VPP vor VCC aus.
+void SetVccProgram(bool on)
+{
+  extern double VccRequired;
+  if(VccRequired < 5.5) {
+    return;
+  }
+  digitalWrite(VCC_EN_PIN, on ? HIGH : LOW);
+  delayMicroseconds(VCC_SETTLE_US);
+}
+//------------------------------------------------------------------------------
 //reset the circuit to a known state
 void InitializeEpromToAKnownState(void)
 {
@@ -136,8 +148,9 @@ void InitializeEpromToAKnownState(void)
   // disable A17 VCC
   //digitalWrite(A17_VCC_PIN, LOW);
 
-  // disable VPP
+  // disable VPP, then VCC back to 5V
   SetVppOff();
+  digitalWrite(VCC_EN_PIN, LOW);
 
   // Data
   SetDataMode(false);

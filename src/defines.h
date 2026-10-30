@@ -45,6 +45,9 @@
 #define NCE_PIN     50
 #define NOE_PIN     51
 #define VPP_EN_PIN  52 // Steuert deinen 12.5V Transistor
+#define VCC_EN_PIN  53 // Schaltet VCC von 5V auf 6,25V (nur Brennimpuls)
+// ponytail: geschätzte Einschwingzeit der VCC-Umschaltung, am Oszi nachmessen und anpassen
+#define VCC_SETTLE_US 500
 
 // Dummy-Definitionen (damit die Menüführung nicht abstürzt)
 #define A13_VCC_PIN 0
