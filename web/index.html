@@ -239,9 +239,14 @@ async function readEprom() {
     return p;
   };
   $('hex').textContent = '';
-  feed(await waitFor(OK, 5000, feed));
+  try {
+    feed(await waitFor(OK, 5000, feed));
+  } finally {
+    // auch bei Fehler/Abbruch alles anzeigen, was bis dahin angekommen ist
+    hexDump(data.subarray(0, Math.min(n, size)));
+    if (n < size) log(`${n} von ${size} Bytes empfangen (bis 0x${n.toString(16).toUpperCase()}), angezeigt.`);
+  }
   if (n !== size) throw new Error(`${n} Bytes empfangen, erwartet ${size}`);
-  hexDump(data);
   return data;
 }
 
