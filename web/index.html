@@ -149,22 +149,34 @@ async function pump() {
 }
 
 // Wartet bis `str` in rx auftaucht; liefert den Text davor. Timeout zählt ab dem letzten empfangenen Zeichen.
+// onData(rx) darf einen Präfix verarbeiten und dessen Länge zurückgeben; der wird dann aus rx entfernt.
+// Gesucht wird nur im neuen Teil, damit lange Übertragungen nicht quadratisch langsam werden.
 function waitFor(str, idleMs, onData) {
   return new Promise((resolve, reject) => {
-    let timer;
+    let timer, scanned = 0;
     const fail = err => { clearTimeout(timer); wake = null; reject(err); };
     const arm = () => { clearTimeout(timer); timer = setTimeout(() => fail(new Error(`Timeout beim Warten auf "${str.trim()}". Empfangen: ${rx.slice(-120)}`)), idleMs); };
     const check = () => {
-      const err = rx.match(/@RSPERR (.*)\r\n/);
-      if (err) { rx = ''; return fail(new Error('Programmer: ' + err[1])); }
-      const i = rx.indexOf(str);
+      const from = Math.max(0, scanned - 32);
+      const e = rx.indexOf('@RSPERR ', from);
+      if (e >= 0) {
+        const end = rx.indexOf('\r\n', e);
+        if (end >= 0) { const msg = rx.slice(e + 8, end); rx = ''; return fail(new Error('Programmer: ' + msg)); }
+        scanned = e;
+        return arm();
+      }
+      const i = rx.indexOf(str, from);
       if (i >= 0) {
         clearTimeout(timer); wake = null;
         const before = rx.slice(0, i);
         rx = rx.slice(i + str.length);
         return resolve(before);
       }
-      if (onData) onData(rx);
+      scanned = rx.length;
+      if (onData) {
+        const used = onData(rx) || 0;
+        if (used) { rx = rx.slice(used); scanned -= used; }
+      }
       arm();
     };
     wake = check;
@@ -212,29 +224,24 @@ async function readEprom() {
   await send('@CMDREAD');
   await waitFor(OK, 3000);
   await waitFor('@RSPREAD\r\n', 3000);
-  // Firmware sendet Hex-Text ("FF FF ..."); live dekodieren und fertige Zeilen sofort anzeigen
+  // Firmware sendet Hex-Text ("FF FF ..."); beim Empfang nur dekodieren, Hex-Dump einmal am Ende
   const data = new Uint8Array(size);
-  let n = 0, nib = -1, pos = 0, shown = 0;
-  const hexView = $('hex');
-  hexView.textContent = '';
+  let n = 0, nib = -1;
   const feed = buf => {
-    for (; pos < buf.length; pos++) {
-      const v = parseInt(buf[pos], 16);
+    let p = 0;
+    for (; p < buf.length && buf[p] !== '@'; p++) { // '@' = Beginn der Abschlussmeldung
+      const v = parseInt(buf[p], 16);
       if (isNaN(v)) continue;
       if (nib < 0) nib = v;
       else { if (n < size) data[n] = nib * 16 + v; n++; nib = -1; }
     }
-    const done = Math.min(n, size);
-    progress(done, size);
-    const rows = done === size ? size : done - done % 16;
-    if (rows > shown) {
-      hexView.insertAdjacentText('beforeend', dumpLines(data, shown, rows));
-      shown = rows;
-      hexView.scrollTop = hexView.scrollHeight;
-    }
+    progress(Math.min(n, size), size);
+    return p;
   };
+  $('hex').textContent = '';
   feed(await waitFor(OK, 5000, feed));
   if (n !== size) throw new Error(`${n} Bytes empfangen, erwartet ${size}`);
+  hexDump(data);
   return data;
 }
 
@@ -297,7 +304,6 @@ $('btnConnect').onclick = () => run(port ? 'Trennen' : 'Verbinden', async () => 
 
 $('btnRead').onclick = () => run('Lesen', async () => {
   lastRead = await readEprom();
-  hexDump(lastRead);
   const blank = lastRead.every(b => b === 0xFF);
   log(blank ? 'EPROM ist leer (alles FF).' : 'EPROM enthält Daten.');
   setStatus('Verbunden', 'ok');
@@ -318,7 +324,6 @@ $('btnWrite').onclick = () => run('Schreiben', async () => {
 $('btnVerify').onclick = () => run('Verify', async () => {
   const data = fitToEprom(fileData);
   lastRead = await readEprom();
-  hexDump(lastRead);
   const diffs = compare(data, lastRead);
   if (diffs.length) throw new Error(`${diffs.length} Abweichungen, erste bei 0x${diffs[0].toString(16).toUpperCase()}: Datei ${data[diffs[0]].toString(16)}, EPROM ${lastRead[diffs[0]].toString(16)}`);
   log('Verify OK: EPROM entspricht der Datei.');
