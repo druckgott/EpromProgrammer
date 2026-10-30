@@ -12,7 +12,7 @@ Basiert auf dem EpromProgrammer von Ciprian Stingu (Arduino Nano + Schieberegist
 | Lesen 27C4001 (512 KiB) inkl. Live-Hex-Dump, Leer-Prüfung | ✅ funktioniert |
 | Speichern als `.bin` | ✅ eingebaut |
 | Schreiben + automatisches Verify | ⚠️ eingebaut, **noch nicht am Gerät getestet** |
-| VCC-Umschaltung 5 V ↔ 6,25 V (Pin 53) | ❌ in der Firmware **nicht umgesetzt** (siehe Abschnitt 6) |
+| VCC-Umschaltung 5 V ↔ 6,25 V (Pin 53) | ⚠️ in der Firmware umgesetzt (nur Fast), **noch nicht nachgemessen** |
 | Spannungsmessung Vcc/Vpp | ❌ nicht vorhanden – die Firmware meldet einfach die angeforderten Werte zurück |
 
 ## Projektstruktur
@@ -171,13 +171,13 @@ Das EPROM verlangt, dass am VPP-Pin während des reinen Auslesens VPP = VCC anli
 * **Wichtig:** Die Diode muss vom **VCC-Pin** des EPROMs abgehen, nicht fest vom 5V-Arduino-Pin — da VCC bei dir jetzt schaltbar zwischen 5V und 6,25V ist (siehe Abschnitt 6), folgt VPP beim Lesen automatisch dem aktuellen VCC-Pegel.
 * Wenn Arduino Pin 52 auf HIGH schaltet und die vollen 12,75V aus der Transistor-Schaltung auf VPP treiben, sperrt die Diode in Rückwärtsrichtung und schützt den Rest der Schaltung.
 
-![VPP Transistor-Schaltung](images/vpp_switch_schaltung.png)
+![VPP Transistor-Schaltung](images/vpp_schaltung.svg)
 
 ---
 
 ## 6. Die VCC-Umschaltung (5V ↔ 6,25V)
 
-> ⚠️ **Stand Firmware:** Pin 53 (VCC_EN) wird von der Firmware derzeit **nicht** geschaltet – es gibt nur `VPP_EN` an Pin 52. Die unten beschriebene Power-Sequenz (VCC vor VPP) ist also noch nicht umgesetzt. Vor dem ersten Schreibversuch klären!
+> **Stand Firmware:** Beim **Fast**-Algorithmus (wenn die Web-App Vcc > 5,5 V anfordert) schaltet die Firmware Pin 53 nur für jeden Brennimpuls: VCC hoch → VPP an → Impuls → VPP aus → VCC zurück auf 5 V → Verify. Das Verify läuft bei 5 V, damit das EPROM die Datenleitungen nicht mit 6,25 V in die Mega-Pins treibt (ATmega max. ca. 5,5 V). Die Einschwingzeit `VCC_SETTLE_US` (500 µs, `src/defines.h`) ist geschätzt – am Oszi nachmessen. **Standard** bleibt bei 5 V.
 
 Damit VCC im Programmiermodus auf 6,25V angehoben werden kann, baust du eine zweite High-Side-Switch-Schaltung auf — nach demselben Prinzip wie die VPP-Schaltung in Abschnitt 5, aber mit einem anderen Transistorpaar aus deinem Bestand, damit du die beiden Schaltungen auf dem Breadboard nicht verwechselst:
 
@@ -212,7 +212,7 @@ Du brauchst dafür eine **zweite Spannungsquelle mit 6,25V** (z. B. ein zweites 
 
 **Wichtig für die Sequenz:** Dein Sketch muss VCC **immer zuerst** auf 6,25V bringen (Pin 53 HIGH), **bevor** VPP auf 12,75V geschaltet wird (Pin 52 HIGH) — und beim Beenden umgekehrt: erst VPP auf 0 (Pin 52 LOW), dann VCC zurück auf 5V (Pin 53 LOW).
 
-![VCC-Umschaltung](images/vcc_switch_schaltung.png)
+![VCC-Umschaltung](images/vcc_schaltung.svg)
 
 ### Restliche Bauteile aus deinem Bestand (Reserve / Alternativen)
 
@@ -253,6 +253,7 @@ Nach dem Start meldet sich die Firmware mit 115200 Baud mit `27[C]XXXX programme
 | 50 | Ē (Chip Enable) |
 | 51 | Ḡ (Output Enable) |
 | 52 | VPP_EN (12,75-V-Schaltstufe) |
+| 53 | VCC_EN (6,25-V-Schaltstufe, nur Fast) |
 
 ---
 
