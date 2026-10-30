@@ -84,15 +84,16 @@ void ReadEprom(void)
   StartReadData();
   delay(10);
   
-  for(uint32_t i = 0; i < EpromEndAddress; i++)
+  // EpromEndAddress ist die letzte Adresse, nicht die Größe
+  for(uint32_t i = 0; i <= EpromEndAddress; i++)
   {
     uint8_t registerOne, registerTwo, registerThree;
-    
+
     GenerateAddress(i, &registerOne, &registerTwo, &registerThree);
     SetAddress(registerOne, registerTwo, registerThree);
-    
+
     uint8_t data = ReadDataByte();
-    
+
     // Gibt die Daten als sauberen Text aus (z.B. "0A" oder "FF")
     if(data < 0x10) Serial.print("0");
     Serial.print(data, HEX);

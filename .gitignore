@@ -3,4 +3,6 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
-gui/build
+archive/gui/build
+statistic_claude/*
+

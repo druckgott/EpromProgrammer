@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EPROM Programmer</title>
+<style>
+  :root { --bg:#f4f4f2; --fg:#1d1d1b; --muted:#6b6b66; --card:#fff; --line:#d9d9d4; --accent:#2b6cb0; --ok:#2f855a; --err:#c53030; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#17181a; --fg:#e6e6e3; --muted:#9a9a94; --card:#212326; --line:#35373b; --accent:#63a4e8; --ok:#68d391; --err:#fc8181; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.4 system-ui, sans-serif; }
+  main { max-width:1000px; margin:0 auto; padding:16px; }
+  h1 { font-size:20px; margin:0 0 12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:12px; }
+  .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  label { color:var(--muted); font-size:13px; }
+  select, input, button { font:inherit; color:var(--fg); background:var(--card); border:1px solid var(--line); border-radius:6px; padding:6px 10px; }
+  input[type=number] { width:80px; }
+  button { cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  button:disabled { opacity:.45; cursor:default; }
+  #status { font-weight:600; }
+  #status.ok { color:var(--ok); } #status.err { color:var(--err); }
+  progress { width:100%; height:10px; }
+  pre { margin:0; font:12px/1.35 ui-monospace, Consolas, monospace; overflow:auto; }
+  #log { max-height:160px; white-space:pre-wrap; }
+  #hex { height:60vh; }
+</style>
+</head>
+<body>
+<main>
+  <h1>EPROM Programmer</h1>
+
+  <div class="card row">
+    <button id="btnConnect" class="primary">Verbinden</button>
+    <span id="status">Nicht verbunden</span>
+  </div>
+
+  <div class="card row">
+    <label>Typ <select id="type"></select></label>
+    <label>Algorithmus <select id="algo"></select></label>
+    <label>Vcc <input id="vcc" type="number" step="0.25" min="4.5" max="6.5"></label>
+    <label>Vpp <input id="vpp" type="number" step="0.25" min="10" max="30"></label>
+  </div>
+
+  <div class="card row">
+    <button id="btnRead" disabled>Lesen</button>
+    <button id="btnWrite" disabled>Schreiben</button>
+    <button id="btnVerify" disabled>Verify</button>
+    <button id="btnOpen">Datei öffnen</button>
+    <button id="btnSave" disabled>Speichern</button>
+    <input id="file" type="file" hidden>
+    <span id="info"></span>
+  </div>
+
+  <div class="card"><progress id="prog" value="0" max="1"></progress><pre id="log"></pre></div>
+  <div class="card"><pre id="hex"></pre></div>
+</main>
+
+<script>
+// Werte aus gui/src/eprom.cpp ("Generic"-Einträge): [Typ-ID, Name, Größe, Algorithmen, Vpp je Algo, Vcc je Algo]
+const EPROMS = [
+  [1, '2716', 0x800, [1], [25], [5]],
+  [2, '27C16', 0x800, [1], [25], [5]],
+  [3, '2732', 0x1000, [1], [25], [5]],
+  [4, '27C32', 0x1000, [1], [12.5], [5]],
+  [5, '2764', 0x2000, [1, 2], [12.5, 12.5], [5, 5]],
+  [6, '27C64', 0x2000, [1, 2], [12.5, 12.75], [5, 5]],
+  [7, '27128', 0x4000, [1, 2], [12.5, 12.5], [5, 5]],
+  [8, '27C128', 0x4000, [1, 2], [12.5, 12.75], [5, 5]],
+  [9, '27256', 0x8000, [1, 2], [12.75, 12.75], [5, 5]],
+  [10, '27C256', 0x8000, [1, 2], [13, 12.75], [5, 5]],
+  [11, '27512', 0x10000, [1, 2], [12.75, 12.75], [5, 5]],
+  [12, '27C512', 0x10000, [1, 2], [13, 12.75], [5, 5]],
+  [13, '27C010', 0x20000, [1, 2], [12.75, 12.75], [5, 5]],
+  [14, '27C1001', 0x20000, [1, 2], [12.75, 12.75], [5, 5]],
+  [15, '27C020', 0x40000, [1, 2], [12.75, 12.75], [5, 5]],
+  [16, '27C2001', 0x40000, [1, 2], [12.75, 12.75], [5, 5]],
+  [17, '27C040', 0x80000, [1, 2], [13, 12.75], [5, 5]],
+  [18, '27C4001', 0x80000, [1, 2], [12.75, 12.75], [5, 5]],
+  [19, '27C080', 0x100000, [1, 2], [13, 12.75], [5, 5]],
+];
+const ALGO_NAMES = { 1: 'Standard', 2: 'Fast' };
+const BLOCK = 32;
+const OK = '@RSPOK  \r\n';
+
+const $ = id => document.getElementById(id);
+let port, reader, writer, rx = '', wake = null, busy = false;
+let fileData = null;   // geladene Datei bzw. zuletzt gelesener Inhalt
+let lastRead = null;
+
+// ---------- UI ----------
+EPROMS.forEach((e, i) => $('type').add(new Option(`${e[1]} (${e[2] / 1024} KiB)`, i)));
+$('type').value = 17; // 27C4001 als Vorauswahl
+function eprom() { return EPROMS[$('type').value]; }
+function onTypeChange() {
+  const e = eprom();
+  $('algo').innerHTML = '';
+  e[3].forEach((a, i) => $('algo').add(new Option(ALGO_NAMES[a], i)));
+  onAlgoChange();
+}
+function onAlgoChange() {
+  const e = eprom(), i = +$('algo').value;
+  $('vpp').value = e[4][i];
+  $('vcc').value = e[5][i];
+}
+$('type').onchange = onTypeChange;
+$('algo').onchange = onAlgoChange;
+onTypeChange();
+
+function log(msg) { const l = $('log'); l.textContent += msg + '\n'; l.scrollTop = l.scrollHeight; }
+function setStatus(msg, cls = '') { $('status').textContent = msg; $('status').className = cls; }
+function progress(v, max) { $('prog').max = max; $('prog').value = v; }
+function updateButtons() {
+  const c = !!port && !busy;
+  $('btnRead').disabled = !c;
+  $('btnWrite').disabled = !c || !fileData;
+  $('btnVerify').disabled = !c || !fileData;
+  $('btnSave').disabled = busy || !lastRead;
+  $('btnConnect').disabled = busy;
+  $('type').disabled = busy;
+  $('btnConnect').textContent = port ? 'Trennen' : 'Verbinden';
+}
+function hexDump(data) { $('hex').textContent = dumpLines(data, 0, data.length); }
+function dumpLines(data, from, to) {
+  const lines = [];
+  for (let a = from; a < to; a += 16) {
+    const row = data.subarray(a, a + 16);
+    const hex = Array.from(row, b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    const asc = Array.from(row, b => (b >= 32 && b < 127 ? String.fromCharCode(b) : '.')).join('');
+    lines.push(a.toString(16).toUpperCase().padStart(5, '0') + ': ' + hex.padEnd(48) + ' ' + asc);
+  }
+  return lines.join('\n') + '\n';
+}
+
+// ---------- Serial ----------
+async function pump() {
+  const dec = new TextDecoder('latin1');
+  try {
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      rx += dec.decode(value);
+      if (wake) wake();
+    }
+  } catch (e) { log('Lesefehler: ' + e.message); }
+}
+
+// Wartet bis `str` in rx auftaucht; liefert den Text davor. Timeout zählt ab dem letzten empfangenen Zeichen.
+function waitFor(str, idleMs, onData) {
+  return new Promise((resolve, reject) => {
+    let timer;
+    const fail = err => { clearTimeout(timer); wake = null; reject(err); };
+    const arm = () => { clearTimeout(timer); timer = setTimeout(() => fail(new Error(`Timeout beim Warten auf "${str.trim()}". Empfangen: ${rx.slice(-120)}`)), idleMs); };
+    const check = () => {
+      const err = rx.match(/@RSPERR (.*)\r\n/);
+      if (err) { rx = ''; return fail(new Error('Programmer: ' + err[1])); }
+      const i = rx.indexOf(str);
+      if (i >= 0) {
+        clearTimeout(timer); wake = null;
+        const before = rx.slice(0, i);
+        rx = rx.slice(i + str.length);
+        return resolve(before);
+      }
+      if (onData) onData(rx);
+      arm();
+    };
+    wake = check;
+    arm();
+    check();
+  });
+}
+
+async function send(text) { await writer.write(new TextEncoder().encode(text)); }
+
+async function connect() {
+  port = await navigator.serial.requestPort();
+  await port.open({ baudRate: 115200, bufferSize: 65536 });
+  reader = port.readable.getReader();
+  writer = port.writable.getWriter();
+  rx = '';
+  pump();
+  setStatus('Warte auf Programmer…');
+  // Öffnen setzt den Mega per DTR zurück, danach meldet sich die Firmware
+  await waitFor('27[C]XXXX programmer', 5000);
+  await waitFor('\r\n', 1000);
+  setStatus('Verbunden', 'ok');
+  log('Programmer gefunden.');
+}
+
+async function disconnect() {
+  try { await reader.cancel(); } catch {}
+  try { reader.releaseLock(); writer.releaseLock(); await port.close(); } catch {}
+  port = null;
+  setStatus('Nicht verbunden');
+}
+
+async function selectType() {
+  const e = eprom();
+  rx = '';
+  await send('@CMDTYPE' + String(e[0]).padStart(2, ' '));
+  await waitFor(OK, 3000);
+  log(`Typ ${e[1]} gesetzt.`);
+}
+
+async function readEprom() {
+  const size = eprom()[2];
+  await selectType();
+  rx = '';
+  await send('@CMDREAD');
+  await waitFor(OK, 3000);
+  await waitFor('@RSPREAD\r\n', 3000);
+  // Firmware sendet Hex-Text ("FF FF ..."); live dekodieren und fertige Zeilen sofort anzeigen
+  const data = new Uint8Array(size);
+  let n = 0, nib = -1, pos = 0, shown = 0;
+  const hexView = $('hex');
+  hexView.textContent = '';
+  const feed = buf => {
+    for (; pos < buf.length; pos++) {
+      const v = parseInt(buf[pos], 16);
+      if (isNaN(v)) continue;
+      if (nib < 0) nib = v;
+      else { if (n < size) data[n] = nib * 16 + v; n++; nib = -1; }
+    }
+    const done = Math.min(n, size);
+    progress(done, size);
+    const rows = done === size ? size : done - done % 16;
+    if (rows > shown) {
+      hexView.insertAdjacentText('beforeend', dumpLines(data, shown, rows));
+      shown = rows;
+      hexView.scrollTop = hexView.scrollHeight;
+    }
+  };
+  feed(await waitFor(OK, 5000, feed));
+  if (n !== size) throw new Error(`${n} Bytes empfangen, erwartet ${size}`);
+  return data;
+}
+
+async function writeEprom(data) {
+  const e = eprom(), algo = e[3][+$('algo').value];
+  const vcc = (+$('vcc').value).toFixed(2).padStart(5, ' ');
+  const vpp = (+$('vpp').value).toFixed(2).padStart(5, ' ');
+  await selectType();
+  rx = '';
+  await send('@CMDWRIT' + vcc + vpp + String(algo).padStart(2, ' '));
+  await waitFor(OK, 3000);
+  await waitFor('@RSPWRIT\r\n', 3000);
+  for (let i = 0; i < data.length; i += BLOCK) {
+    await waitFor('@RSPBLCK', 5000);
+    const block = parseInt(await waitFor('\r\n', 1000), 10);
+    if (block !== i) throw new Error(`Block ${block} angefordert, erwartet ${i}`);
+    await writer.write(data.subarray(i, i + BLOCK));
+    // Standard-Algorithmus: bis zu 10 x 50 ms pro Byte
+    await waitFor(OK, 30000);
+    progress(i + BLOCK, data.length);
+  }
+  await waitFor('@RSPWRIT\r\n', 5000);
+}
+
+function fitToEprom(data) {
+  const size = eprom()[2];
+  const out = new Uint8Array(size).fill(0xFF);
+  out.set(data.subarray(0, size));
+  if (data.length !== size) log(`Hinweis: Datei hat ${data.length} Bytes, EPROM ${size}. ${data.length < size ? 'Rest mit FF aufgefüllt.' : 'Abgeschnitten.'}`);
+  return out;
+}
+
+function compare(a, b) {
+  const diffs = [];
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) diffs.push(i);
+  return diffs;
+}
+
+// ---------- Aktionen ----------
+async function run(label, fn) {
+  busy = true; updateButtons();
+  progress(0, 1);
+  log(label + '…');
+  const t0 = performance.now();
+  try {
+    await fn();
+    log(`${label} fertig (${((performance.now() - t0) / 1000).toFixed(1)} s).`);
+  } catch (e) {
+    log('FEHLER: ' + e.message);
+    setStatus(label + ' fehlgeschlagen', 'err');
+  }
+  busy = false; updateButtons();
+}
+
+$('btnConnect').onclick = () => run(port ? 'Trennen' : 'Verbinden', async () => {
+  if (!('serial' in navigator)) throw new Error('Web Serial wird nicht unterstützt (Chrome/Edge nötig).');
+  if (port) return disconnect();
+  try { await connect(); } catch (e) { await disconnect(); throw e; }
+});
+
+$('btnRead').onclick = () => run('Lesen', async () => {
+  lastRead = await readEprom();
+  hexDump(lastRead);
+  const blank = lastRead.every(b => b === 0xFF);
+  log(blank ? 'EPROM ist leer (alles FF).' : 'EPROM enthält Daten.');
+  setStatus('Verbunden', 'ok');
+});
+
+$('btnWrite').onclick = () => run('Schreiben', async () => {
+  const data = fitToEprom(fileData);
+  if (!confirm(`${data.length} Bytes auf ${eprom()[1]} schreiben?`)) return;
+  await writeEprom(data);
+  log('Prüfe geschriebene Daten…');
+  lastRead = await readEprom();
+  const diffs = compare(data, lastRead);
+  if (diffs.length) throw new Error(`Verify: ${diffs.length} Abweichungen, erste bei 0x${diffs[0].toString(16).toUpperCase()}`);
+  log('Verify OK.');
+  setStatus('Verbunden', 'ok');
+});
+
+$('btnVerify').onclick = () => run('Verify', async () => {
+  const data = fitToEprom(fileData);
+  lastRead = await readEprom();
+  hexDump(lastRead);
+  const diffs = compare(data, lastRead);
+  if (diffs.length) throw new Error(`${diffs.length} Abweichungen, erste bei 0x${diffs[0].toString(16).toUpperCase()}: Datei ${data[diffs[0]].toString(16)}, EPROM ${lastRead[diffs[0]].toString(16)}`);
+  log('Verify OK: EPROM entspricht der Datei.');
+  setStatus('Verbunden', 'ok');
+});
+
+$('btnOpen').onclick = () => $('file').click();
+$('file').onchange = async () => {
+  const f = $('file').files[0];
+  if (!f) return;
+  fileData = new Uint8Array(await f.arrayBuffer());
+  $('info').textContent = `${f.name} (${fileData.length} Bytes)`;
+  log(`Datei ${f.name} geladen.`);
+  hexDump(fileData);
+  updateButtons();
+};
+
+$('btnSave').onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lastRead]));
+  a.download = `${eprom()[1]}.bin`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+if (navigator.serial) navigator.serial.addEventListener('disconnect', e => { if (e.target === port) { port = null; setStatus('Verbindung getrennt', 'err'); updateButtons(); } });
+updateButtons();
+</script>
+</body>
+</html>

@@ -23,6 +23,7 @@
  */
 //----------------------------------------------------------------------
 #include "ArduinoIO.h"
+#include <cctype>
 //----------------------------------------------------------------------
 
 ArduinoIO::ArduinoIO(QSerialPort *port)
@@ -508,7 +509,10 @@ void ArduinoIO::SetWslMode(bool mode) {
 
 void ArduinoIO::ProcessIncomingReadData(QByteArray &new_data) {
     if(wslMode) {
-        textBuffer.append(new_data);
+        // Nur Hex-Ziffern übernehmen: Firmware trennt mit " " und "\r\n"
+        for(char c : new_data) {
+            if(isxdigit((unsigned char)c)) textBuffer.append(c);
+        }
         // Immer wenn wir 2 Zeichen haben (z.B. "FF"), wandeln wir sie in 1 echtes Byte um
         while(textBuffer.length() >= 2) {
             QString hexPair = textBuffer.left(2);
