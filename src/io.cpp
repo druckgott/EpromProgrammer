@@ -103,7 +103,9 @@ const int addrPins[] = {30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 
 void SetAddress(uint8_t registerOne, uint8_t registerTwo, uint8_t registerThree)
 {
   // Baut die 3 Register wieder zu einer 32-Bit Adresse zusammen
-  uint32_t fullAddr = registerOne | (registerTwo << 8) | ((uint32_t)registerThree << 16);
+  // Cast nötig: int ist auf AVR 16 Bit, (registerTwo << 8) wäre ab A15 negativ und würde
+  // beim ODER auf uint32_t A16..A18 mit 1 füllen (0x8000 -> 0x78000)
+  uint32_t fullAddr = registerOne | ((uint32_t)registerTwo << 8) | ((uint32_t)registerThree << 16);
   
   // Schaltet die Pins 30 bis 48 direkt
   for(int i = 0; i < 19; i++) {
@@ -268,15 +270,14 @@ double GetVccVoltage(void)
 }
 //------------------------------------------------------------------------------
 
-void WaitForData(void)
+// Wartet, bis `count` Bytes da sind (max. timeoutMs); liefert die Wartezeit in ms.
+// Vorher stand hier `available() < 0` (nie wahr), d.h. es wurde gar nicht gewartet.
+unsigned long WaitForData(uint8_t count, unsigned long timeoutMs)
 {
   unsigned long start = millis();
-  while(Serial.available() < 0)
-  {
-    if(millis() - start > 1000) {
-      break;
-    }
+  while(Serial.available() < count && millis() - start < timeoutMs) {
     delay(1);
   }
+  return millis() - start;
 }
 //------------------------------------------------------------------------------

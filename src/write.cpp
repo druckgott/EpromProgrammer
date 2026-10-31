@@ -78,16 +78,20 @@ bool WriteEprom(void)
     Serial.println(i);
     Serial.flush();
 
-    WaitForData();
+    // Host schickt erst nach der Anforderung; großzügig warten statt 400/750 ms Wettlauf
+    unsigned long waited = WaitForData(SERIAL_BUF_LEN, 10000);
 
-    uint8_t count = Serial.readBytes(SerialBuffer, SERIAL_BUF_LEN);    
+    uint8_t count = Serial.readBytes(SerialBuffer, SERIAL_BUF_LEN);
     if(count != SERIAL_BUF_LEN)
     {
       Serial.print(F(RESPONSE_FLAG));
       Serial.print(F(RESPONSE_ERROR));
       Serial.print(count);
       Serial.print(F(" bytes received for block 0x"));
-      Serial.println(i, HEX);
+      Serial.print(i, HEX);
+      Serial.print(F(" after "));
+      Serial.print(waited);
+      Serial.println(F(" ms"));
       Serial.flush();
       return false;
     }
@@ -141,6 +145,24 @@ void DisplayBlockError(uint32_t address, uint8_t expected, uint8_t actual)
   Serial.flush();
 }
 //------------------------------------------------------------------------------
+// Vor dem Brennen lesen (Adresse muss gesetzt sein). true = kein Impuls nötig:
+// Byte stimmt schon (*ok = true, z.B. Wiederholung nach Abbruch) oder es ist eine 0
+// gesetzt, wo eine 1 hin muss (*ok = false, nur durch Löschen behebbar).
+bool AlreadyWritten(uint32_t address, uint8_t expected, bool *ok)
+{
+  uint8_t current = VerifyData();
+  *ok = (current == expected);
+  if(*ok) {
+    return true;
+  }
+  if((current & expected) != expected)
+  {
+    DisplayBlockError(address, expected, current);
+    return true;
+  }
+  return false;
+}
+//------------------------------------------------------------------------------
 // 2716 & 27C16 Eproms
 bool WriteBlockX16(uint32_t i)
 {
@@ -189,6 +211,7 @@ bool WriteStandardBlock(uint32_t i)
   extern uint8_t *SerialBuffer;
 
   SetDataMode(true);
+  bool writeOk;
   
   for(uint8_t j = 0; j < SERIAL_BUF_LEN; j++)
   {
@@ -200,6 +223,11 @@ bool WriteStandardBlock(uint32_t i)
         
     GenerateAddress(i + j, &registerOne, &registerTwo, &registerThree);
     SetAddress(registerOne, registerTwo, registerThree);
+
+    if(AlreadyWritten(i + j, SerialBuffer[j], &writeOk)) {
+      if(!writeOk) return false;
+      continue;
+    }
 
     for(uint8_t k = 1; k <= 10; k++) 
     {
@@ -240,6 +268,7 @@ bool WriteFastBlock(uint32_t i)
   extern uint8_t *SerialBuffer;
 
   SetDataMode(true);  
+  bool writeOk;
   for(uint8_t j = 0; j < SERIAL_BUF_LEN; j++)
   {
     if(SerialBuffer[j] == 0xFF) {
@@ -250,7 +279,12 @@ bool WriteFastBlock(uint32_t i)
 
     GenerateAddress(i + j, &registerOne, &registerTwo, &registerThree);
     SetAddress(registerOne, registerTwo, registerThree);
-    
+
+    if(AlreadyWritten(i + j, SerialBuffer[j], &writeOk)) {
+      if(!writeOk) return false;
+      continue;
+    }
+
     for(uint8_t k = 1; k <= 10; k++)
     {
       SetVccProgram(true);

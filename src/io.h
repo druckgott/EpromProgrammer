@@ -35,5 +35,5 @@ void SelectEprom(EPROM_TYPE newEprom);
 void GenerateAddress(uint32_t address, uint8_t *registerOne, uint8_t *registerTwo, uint8_t *registerThree);
 double GetVppVoltage(void);
 double GetVccVoltage(void);
-void WaitForData(void);
+unsigned long WaitForData(uint8_t count, unsigned long timeoutMs);
 //------------------------------------------------------------------------------

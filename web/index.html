@@ -90,6 +90,12 @@ const $ = id => document.getElementById(id);
 let port, reader, writer, rx = '', wake = null, busy = false;
 let fileData = null;   // geladene Datei bzw. zuletzt gelesener Inhalt
 let lastRead = null;
+// Protokoll-Mitschnitt: letzte Serial-Ereignisse, wird bei Fehler ins Log geschrieben
+const trace = [];
+function tr(dir, text) {
+  trace.push(`${performance.now().toFixed(0).padStart(8)} ms ${dir} ${JSON.stringify(text.length > 80 ? text.slice(0, 80) + '…' : text)}`);
+  if (trace.length > 40) trace.shift();
+}
 
 // ---------- UI ----------
 EPROMS.forEach((e, i) => $('type').add(new Option(`${e[1]} (${e[2] / 1024} KiB)`, i)));
@@ -142,7 +148,9 @@ async function pump() {
     for (;;) {
       const { value, done } = await reader.read();
       if (done) break;
-      rx += dec.decode(value);
+      const t = dec.decode(value);
+      tr('<', t);
+      rx += t;
       if (wake) wake();
     }
   } catch (e) { log('Lesefehler: ' + e.message); }
@@ -185,7 +193,7 @@ function waitFor(str, idleMs, onData) {
   });
 }
 
-async function send(text) { await writer.write(new TextEncoder().encode(text)); }
+async function send(text) { tr('>', text); await writer.write(new TextEncoder().encode(text)); }
 
 async function connect() {
   port = await navigator.serial.requestPort();
@@ -263,6 +271,7 @@ async function writeEprom(data) {
     await waitFor('@RSPBLCK', 5000);
     const block = parseInt(await waitFor('\r\n', 1000), 10);
     if (block !== i) throw new Error(`Block ${block} angefordert, erwartet ${i}`);
+    tr('>', `[${BLOCK} Bytes Block 0x${i.toString(16)}]`);
     await writer.write(data.subarray(i, i + BLOCK));
     // Standard-Algorithmus: bis zu 10 x 50 ms pro Byte
     await waitFor(OK, 30000);
@@ -296,6 +305,7 @@ async function run(label, fn) {
     log(`${label} fertig (${((performance.now() - t0) / 1000).toFixed(1)} s).`);
   } catch (e) {
     log('FEHLER: ' + e.message);
+    log('Letzte Serial-Ereignisse (< empfangen, > gesendet):\n' + trace.join('\n'));
     setStatus(label + ' fehlgeschlagen', 'err');
   }
   busy = false; updateButtons();
@@ -317,7 +327,17 @@ $('btnRead').onclick = () => run('Lesen', async () => {
 $('btnWrite').onclick = () => run('Schreiben', async () => {
   const data = fitToEprom(fileData);
   if (!confirm(`${data.length} Bytes auf ${eprom()[1]} schreiben?`)) return;
-  await writeEprom(data);
+  // Übertragungsfehler: neu starten; die Firmware überspringt bereits korrekte Bytes.
+  // Brennfehler ("Wrote 0x..") nicht wiederholen, das Byte ist dann wirklich falsch.
+  for (let attempt = 1; ; attempt++) {
+    try { await writeEprom(data); break; }
+    catch (e) {
+      if (attempt >= 3 || e.message.includes('Wrote 0x')) throw e;
+      log(`Übertragungsfehler (Versuch ${attempt}): ${e.message}\nWiederhole in 2 s, bereits geschriebene Bytes werden übersprungen…`);
+      log(trace.join('\n'));
+      await new Promise(r => setTimeout(r, 2000));
+    }
+  }
   log('Prüfe geschriebene Daten…');
   lastRead = await readEprom();
   const diffs = compare(data, lastRead);
