@@ -2,9 +2,9 @@
 
 UV-EPROMs (getestet mit **ST M27C4001**) auslesen und beschreiben mit einem **Arduino Mega 2560**, direkt verdrahtet ohne Schieberegister. Bedient wird das Ganze über eine **Web-App im Browser** (Chrome/Edge, Web Serial API) – direkt unter Windows, ohne WSL oder Treiber-Umwege.
 
-Anwendungsbeispiel: das CPU-Game-ROM eines Flippers **The Simpsons Pinball Party (Stern, 2003, Whitestar-System)** auf einen M27C4001 brennen – siehe [Beispiel: Simpsons Pinball Party](#beispiel-simpsons-pinball-party-stern).
+Anwendungsbeispiel: das CPU-Game-ROM eines Flippers **The Simpsons Pinball Party (Stern, 2003, Whitestar-System)** auf einen M27C4001 brennen – siehe [Beispiel: Simpsons Pinball Party](#9-beispiel-simpsons-pinball-party-stern).
 
-Basiert auf dem EpromProgrammer von Ciprian Stingu (Arduino Nano + Schieberegister + Linux-Qt-GUI), Lizenz GPL v2. Das ursprüngliche Projekt ist unter [`archive/`](archive/README.md) dokumentiert.
+![Aufbau mit Labornetzteil](images/mega_aufbau.jpg)
 
 ## Stand
 
@@ -18,67 +18,86 @@ Basiert auf dem EpromProgrammer von Ciprian Stingu (Arduino Nano + Schieberegist
 | VCC-Umschaltung 5 V ↔ 6,25 V (Pin 53) | ⚠️ in Betrieb (Fast), Umschaltzeit **noch nicht mit dem Oszi nachgemessen** |
 | Spannungsmessung Vcc/Vpp | ❌ nicht vorhanden – die Firmware meldet einfach die angeforderten Werte zurück |
 
-## Projektstruktur
+## Inhalt
 
-| Ordner | Inhalt |
-| :--- | :--- |
-| `src/` | Firmware für den Arduino Mega (PlatformIO) |
-| `web/` | Web-App (`index.html`, eine Datei, keine Abhängigkeiten) |
-| `images/` | Fotos, Pinout und Schaltpläne |
-| `archive/` | Alte Linux-Qt-GUI und Doku des ursprünglichen Nano-Projekts |
-| `hardware/`, `FreeCAD/` | PCB und Gehäuse des **ursprünglichen Nano-Aufbaus** (passen nicht zum Mega-Aufbau) |
-
-## Fotos
-
-Arduino Mega mit EPROM-Sockel und Breadboard für die Schaltstufen, versorgt über ein Labornetzteil:
-
-![Aufbau mit Labornetzteil](images/mega_aufbau.jpg)
-
-![EPROM-Sockel auf dem Mega](images/mega_sockel.jpg)
+1. [Sicherheit zuerst](#1-sicherheit-zuerst)
+2. [Teileliste](#2-teileliste)
+3. [Gesamtschaltplan](#3-gesamtschaltplan)
+4. [Verdrahtung Schritt für Schritt](#4-verdrahtung-schritt-für-schritt)
+5. [Vor dem ersten Einsetzen: Spannungen prüfen](#5-vor-dem-ersten-einsetzen-spannungen-prüfen)
+6. [Firmware flashen](#6-firmware-flashen)
+7. [Web-App starten](#7-web-app-starten)
+8. [Bedienung: Lesen, Schreiben, Verify](#8-bedienung-lesen-schreiben-verify)
+9. [Beispiel: Simpsons Pinball Party (Stern)](#9-beispiel-simpsons-pinball-party-stern)
+10. [Unterstützte EPROM-Typen und Grenzen](#10-unterstützte-eprom-typen-und-grenzen)
+11. [Projektstruktur, Herkunft, Lizenz](#11-projektstruktur-herkunft-lizenz)
 
 ---
 
-# Aufbau: Arduino Mega, direkt verdrahtet
+## 1. Sicherheit zuerst
 
-Dieses Projekt ermöglicht das Auslesen und Beschreiben von UV-EPROMs (speziell **ST M27C4001 / 27C040**) mit einem Arduino Mega 2560.
-Durch die hohe Anzahl an Pins am Mega werden **keine Schieberegister** benötigt. Das EPROM wird direkt verkabelt.
+Das M27C4001 arbeitet beim **Lesen** mit 5 V, benötigt zum **Schreiben** (Brennen) jedoch:
+- **12,75 V ± 0,25 V an Pin 1 (`VPP`)**
+- **6,25 V ± 0,25 V an Pin 32 (`VCC`)** – nicht nur 5 V (Datenblatt: „TA = 25°C; VCC = 6,25V ± 0,25V; VPP = 12,75V ± 0,25V“ im Programmiermodus)
 
-Alle Tabellen unten enthalten jetzt drei Spalten, damit keine Verwechslung mehr möglich ist:
-- **EPROM Pin** = die physische Pin-Nummer am Gehäuse (1–32, wie im Pinout-Bild eingekreist)
-- **Chip-Label** = die Bezeichnung, die exakt so auf dem Pinout-Diagramm des Herstellers steht (z. B. `VSS`, nicht "GND")
-- **Bedeutung / Arduino-Pin** = Erklärung bzw. Zielpin am Arduino Mega
+**Verbinde NIEMALS 12,75 V oder 6,25 V direkt mit einem Pin des Arduinos!** Das zerstört den Mikrocontroller (ATmega max. ca. 5,5 V). Beide Spannungen laufen ausschließlich über die Transistor-Schaltstufen unten.
 
-## ⚠️ Wichtiger Warnhinweis
-Das M27C4001 arbeitet beim **Lesen** mit 5V, benötigt zum **Schreiben** (Brennen) jedoch zwingend:
-- **12,75V ± 0,25V an Pin 1 (Chip-Label `VPP`)**
-- **6,25V ± 0,25V an Pin 32 (Chip-Label `VCC`)** — nicht nur 5V!
-
-**Verbinde NIEMALS die 12,75V direkt mit einem Pin des Arduinos!** Dies zerstört den Mikrocontroller sofort. Nutze zwingend die unten beschriebene Transistor-Schaltung.
-
-**Power-Sequencing-Regel (laut Datenblatt zwingend einzuhalten):**
-> VCC muss gleichzeitig mit oder vor VPP angelegt werden. Beim Abschalten gilt die umgekehrte Reihenfolge: VPP zuerst runter, dann VCC.
-
-D.h. in der Steuerlogik (Sketch) immer: **VCC hoch → dann VPP hoch** beim Start des Schreibens, und **VPP runter → dann VCC runter** beim Beenden. Niemals VPP ohne anliegendes VCC schalten.
+**Power-Sequencing (Datenblatt):** VCC gleichzeitig mit oder vor VPP anlegen, beim Abschalten umgekehrt (erst VPP, dann VCC). Die Firmware hält diese Reihenfolge ein.
 
 Datenblatt: https://www.datasheet-pdf.info/entry/M27C4001
 
 ---
 
-## 1. Spannungsversorgung (Power)
+## 2. Teileliste
 
-| EPROM Pin | Chip-Label | Bedeutung | Anschluss am Arduino Mega / Schaltung |
-| :--- | :--- | :--- | :--- |
-| 16 | **VSS** | Masse (0V) — *im Pinout-Bild steht `VSS`, nicht "GND"* | `GND` (Masse) |
-| 32 | **VCC** | Versorgungsspannung | **Schaltbare Versorgung: 5V zum Lesen / 6,25V ± 0,25V zum Schreiben** (siehe Abschnitt 6) |
-| 1 | **VPP** | Programmierspannung | *Geht an den Ausgang der Transistor-Schaltung (siehe Abschnitt 5)* |
+| Anzahl | Teil | Wofür |
+| :--- | :--- | :--- |
+| 1 | Arduino Mega 2560 (z. B. Klon mit CH340) + USB-Kabel | Steuerung |
+| 1 | 32-poliger DIP-Sockel (ideal: ZIF-Sockel) | EPROM |
+| 1 | Labornetzteil mit **2 einstellbaren Kanälen** (z. B. PS-2403D) – oder 12,75-V-Netzteil + LM317 auf 6,25 V | Vpp und Programmier-Vcc |
+| 1 + 1 | **BC337** (NPN) + **BC327** (PNP) | VPP-Schaltstufe |
+| 1 + 1 | **S8050** (NPN) + **S8550** (PNP) | VCC-Schaltstufe |
+| 4 | Widerstand 1 kΩ | je 2 pro Schaltstufe |
+| 2 | Widerstand 10 kΩ | Pull-up je Schaltstufe |
+| 2 | Schottky-Diode **1N5819** | D1 (5 V → VCC), D2 (VCC → VPP) |
+| – | Breadboard, Steckbrücken | Aufbau |
+| – | UV-Löschgerät | Fenster-EPROMs löschen |
 
-![Pinout_M27C4001](images/M27C4001.png)
-
-> **Hinweis:** Anders als in älteren Bauanleitungen oft angenommen, reicht ein fester 5V-Anschluss an VCC **nicht** aus. Für den Programmiermodus muss VCC auf 6,25V angehoben werden – sonst läuft der Chip außerhalb der Spezifikation und das Programmieren funktioniert nicht zuverlässig (Datenblatt: "TA = 25°C; VCC = 6,25V ± 0,25V; VPP = 12,75V ± 0,25V" im Programmiermodus).
+Die zwei Transistorpaare haben **unterschiedliche Pinouts** (TO-92, flache Seite zu dir, Beine unten, links→rechts):
+- BC337 / BC327: **C – B – E**
+- S8050 / S8550: **E – B – C**
 
 ---
 
-## 2. Daten-Pins (PORTA für maximale Geschwindigkeit)
+## 3. Gesamtschaltplan
+
+Alles auf einen Blick – inklusive EPROM-Sockel, beider Schaltstufen und Netzteil. **Gleiche Beschriftung = gleicher Draht**, alle GND sind miteinander verbunden.
+
+![Gesamtschaltplan Mega + M27C4001](images/gesamtschaltplan.svg)
+
+Pinout des Chips (Herstellerbezeichnungen):
+
+![Pinout M27C4001](images/M27C4001.png)
+
+![EPROM-Sockel auf dem Mega](images/mega_sockel.jpg)
+
+---
+
+## 4. Verdrahtung Schritt für Schritt
+
+Die Tabellen nennen die physische **EPROM-Pin-Nummer** (1–32), das **Chip-Label** wie im Pinout-Bild (z. B. `VSS`, nicht „GND“) und das Ziel am Mega.
+
+### 4.1 Masse und Versorgung
+
+| EPROM Pin | Chip-Label | Bedeutung | Anschluss |
+| :--- | :--- | :--- | :--- |
+| 16 | **VSS** | Masse (0 V) | `GND` am Mega |
+| 32 | **VCC** | Versorgung: 5 V Lesen / 6,25 V Schreiben | Ausgang der VCC-Schaltstufe + D1 ([4.6](#46-vcc-umschaltung-5-v--625-v)) |
+| 1 | **VPP** | Programmierspannung | Ausgang der VPP-Schaltstufe + D2 ([4.5](#45-vpp-schaltstufe-1275-v)) |
+
+**Gemeinsame Masse:** Minus beider Netzteilkanäle mit GND des Mega verbinden.
+
+### 4.2 Daten-Pins (PORTA)
 
 | EPROM Pin | Chip-Label | Arduino Mega Pin |
 | :--- | :--- | :--- |
@@ -91,11 +110,7 @@ Datenblatt: https://www.datasheet-pdf.info/entry/M27C4001
 | 20 | **Q6** | Digital `28` |
 | 21 | **Q7** | Digital `29` |
 
-![Pinout_M27C4001](images/M27C4001.png)
-
----
-
-## 3. Adress-Pins
+### 4.3 Adress-Pins
 
 | EPROM Pin | Chip-Label | Arduino Mega Pin |
 | :--- | :--- | :--- |
@@ -119,107 +134,54 @@ Datenblatt: https://www.datasheet-pdf.info/entry/M27C4001
 | 30 | **A17** | Digital `47` |
 | 31 | **A18** | Digital `48` |
 
-![Pinout_M27C4001](images/M27C4001.png)
-
----
-
-## 4. Steuer-Pins
+### 4.4 Steuer-Pins
 
 | EPROM Pin | Chip-Label | Bedeutung | Arduino Mega Pin |
 | :--- | :--- | :--- | :--- |
-| 22 | **Ē** (im Bild als "E" mit Überstrich) | Chip Enable (Aktiv LOW) | Digital `50` |
-| 24 | **Ḡ** (im Bild als "G" mit Überstrich) | Output Enable (Aktiv LOW) | Digital `51` |
-| - | *(kein EPROM-Pin, externe Steuerlogik)* | VPP_EN — steuert deine VPP-Transistor-Schaltung | Digital `52` |
-| - | *(kein EPROM-Pin, externe Steuerlogik)* | VCC_EN — steuert deine VCC-Umschaltung 5V ↔ 6,25V | Digital `53` |
+| 22 | **Ē** | Chip Enable (aktiv LOW) | Digital `50` |
+| 24 | **Ḡ** | Output Enable (aktiv LOW) | Digital `51` |
+| – | *(kein EPROM-Pin)* | VPP_EN → VPP-Schaltstufe | Digital `52` |
+| – | *(kein EPROM-Pin)* | VCC_EN → VCC-Schaltstufe | Digital `53` |
 
-![Pinout_M27C4001](images/M27C4001.png)
+Auf dem Chip stehen nur `Ē` und `Ḡ`; „CE“/„OE“ sind die üblichen Namen in Datenblättern. D50–D53 sind am Mega zugleich die SPI-Pins – unproblematisch, solange kein weiteres SPI-Gerät angeschlossen ist. D49 bleibt frei.
 
-> **Zur Klarstellung:** Auf dem Chip-Gehäuse selbst sind nur `Ē` (Pin 22) und `Ḡ` (Pin 24) aufgedruckt — "CE" und "OE" sind nur die gebräuchlichen Namen dafür in Datenblättern/Schaltplänen, keine eigenen Chip-Labels. `VPP_EN` und `VCC_EN` sind keine EPROM-Pins, sondern nur die Bezeichnungen, die *du* für die beiden Steuerleitungen zu deinen Transistor-Schaltungen vergibst.
+### 4.5 VPP-Schaltstufe (12,75 V)
 
-> **Hinweis SPI:** Digital 50–53 sind auf dem Mega gleichzeitig die Hardware-SPI-Pins (MISO/MOSI/SCK/SS). Solange du kein weiteres SPI-Gerät (z. B. SD-Karten-Modul) parallel nutzt, ist das unproblematisch.
+High-Side-Switch: Pin 52 HIGH → 12,75 V an EPROM Pin 1. BC337/BC327 (45 V / 800 mA) haben bei 12,75 V und max. 50 mA IPP reichlich Reserve.
 
----
+1. Arduino **Pin 52** über **1 kΩ** an die **Basis** des **BC337**.
+2. **Emitter** des BC337 an **GND**.
+3. **Kollektor** des BC337 über **1 kΩ** an die **Basis** des **BC327**.
+4. **Emitter** des BC327 an **+12,75 V** (Netzteil B+).
+5. **10 kΩ** zwischen Emitter (12,75 V) und Basis des BC327 – hält ihn im Ruhezustand sicher aus.
+6. **Kollektor** des BC327 an **EPROM Pin 1 (VPP)**.
+7. **D2 (1N5819):** Anode an **EPROM Pin 32 (VCC)**, Kathode (Ring) an **EPROM Pin 1 (VPP)**.
 
-## 5. Die 12,75V VPP Transistor-Schaltung (High-Side Switch)
+**Warum D2?** Beim Lesen muss VPP = VCC sein. Die Diode liefert das; beim Brennen sperrt sie und schützt den Rest der Schaltung. Schottky statt 1N4148/1N4007, weil deren 0,6–0,7 V Abfall VPP beim Lesen auf ca. 4,3 V drücken würde. D2 geht vom **VCC-Pin des EPROMs** ab, nicht vom 5-V-Pin des Mega – so folgt VPP dem aktuellen VCC.
 
-Um die 12,75V schnell und sicher ein- und auszuschalten, baust du eine kleine Schaltung auf dem Breadboard auf. Arduino-Pin 52 steuert diese Schaltung.
+![VPP-Schaltstufe](images/vpp_schaltung.svg)
 
-**Aus deinem vorhandenen Bauteil-Sortiment verwenden wir hier: NPN = `BC337`, PNP = `BC327`.**
-Beide sind für bis zu 45V / 800mA spezifiziert — bei nur 12,75V und wenigen mA Laststrom (IPP max. 50mA laut Datenblatt) ist das mehr als ausreichend Reserve.
+### 4.6 VCC-Umschaltung (5 V ↔ 6,25 V)
 
-### Benötigte Bauteile:
-* 1x externes DC-Netzteil (exakt **12,75V ± 0,25V**, einstellbar)
-* 1x **BC337** (NPN)
-* 1x **BC327** (PNP)
-* 2x 1kΩ Widerstand
-* 1x 10kΩ Widerstand
-* 1x Schottky-Diode (z. B. 1N5819) — *statt Standard-Silizium-Diode, siehe Begründung unten*
+Gleiches Prinzip mit S8050/S8550 (anderes Pinout als BC337/BC327, siehe [Teileliste](#2-teileliste)). Pin 53 HIGH → 6,25 V an EPROM Pin 32.
 
-> **Pinout BC337 / BC327 (TO-92):** Flache Seite zu dir, Beinchen nach unten → von links nach rechts **C – B – E** (Kollektor – Basis – Emitter). Das ist bei beiden identisch, nur die Stromrichtung (NPN vs. PNP) unterscheidet sich. Achtung: Das ist eine andere Pin-Reihenfolge als z. B. bei 2N3904/2N3906 (dort EBC) — beim Verdrahten also nicht verwechseln.
+1. Arduino **Pin 53** über **1 kΩ** an die **Basis** des **S8050**.
+2. **Emitter** des S8050 an **GND**.
+3. **Kollektor** des S8050 über **1 kΩ** an die **Basis** des **S8550**.
+4. **Emitter** des S8550 an **+6,25 V** (Netzteil A+).
+5. **10 kΩ** zwischen 6,25 V und Basis des S8550.
+6. **Kollektor** des S8550 an **EPROM Pin 32 (VCC)**.
+7. ⚠️ **D1 (1N5819), zwingend:** Anode an den **5-V-Pin des Mega**, Kathode (Ring) an **EPROM Pin 32 (VCC)**.
 
-### Aufbau der Schaltung:
+**Warum D1?** Solange Pin 53 LOW ist, sperrt der S8550. Ohne D1 hätte das EPROM beim Lesen 0 V und liefert nur `00`. Mit D1 bekommt es ca. 4,7 V. Beim Brennen sperrt D1, damit die 6,25 V nicht in den 5-V-Pin des Mega zurückfließen.
 
-1. **Gemeinsame Masse:** Verbinde den Minus-Pol (GND) deines 12,75V-Netzteils zwingend mit dem GND des Arduinos.
-2. **Der Steuereingang:** Verbinde Arduino **Pin 52** über einen **1kΩ Widerstand** mit der **Basis (mittleres Bein)** des **BC337**.
-3. **NPN Masse:** Verbinde den **Emitter (rechtes Bein)** des **BC337** mit **GND**.
-4. **Verbindung der Transistoren:** Verbinde den **Kollektor (linkes Bein)** des **BC337** über den zweiten **1kΩ Widerstand** mit der **Basis (mittleres Bein)** des **BC327**.
-5. **Der 12,75V Eingang:** Verbinde den **Emitter (rechtes Bein)** des **BC327** mit dem Plus-Pol (**12,75V**) deines Netzteils.
-6. **Pull-Up für Sicherheit:** Setze den **10kΩ Widerstand** zwischen den Emitter (12,75V) und die Basis des **BC327** (hält ihn standardmäßig sicher abgeschaltet).
-7. **Der VPP Ausgang:** Der **Kollektor (linkes Bein)** des **BC327** geht direkt an **Pin 1 (Chip-Label `VPP`)** des EPROMs.
-
-### Der Dioden-Trick (Für das Auslesen):
-Das EPROM verlangt, dass am VPP-Pin während des reinen Auslesens VPP = VCC anliegt.
-* Setze die **Schottky-Diode** so ein, dass der Strom vom **VCC-Pin des EPROMs** zum **VPP-Pin des EPROMs** fließen kann (der Ring/Strich der Diode zeigt zum EPROM-VPP-Pin).
-* **Warum Schottky statt Standarddiode?** Eine normale Silizium-Diode (1N4148/1N4007) hat ca. 0,6–0,7V Flussspannung – dann läge VPP beim Lesen nur bei ca. 4,3–4,4V statt der geforderten ~5V (VPP = VCC). Eine Schottky-Diode hat nur ca. 0,2–0,3V Abfall und liegt damit deutlich näher an der Spezifikation.
-* **Wichtig:** Die Diode muss vom **VCC-Pin** des EPROMs abgehen, nicht fest vom 5V-Arduino-Pin — da VCC bei dir jetzt schaltbar zwischen 5V und 6,25V ist (siehe Abschnitt 6), folgt VPP beim Lesen automatisch dem aktuellen VCC-Pegel.
-* Wenn Arduino Pin 52 auf HIGH schaltet und die vollen 12,75V aus der Transistor-Schaltung auf VPP treiben, sperrt die Diode in Rückwärtsrichtung und schützt den Rest der Schaltung.
-
-![VPP Transistor-Schaltung](images/vpp_schaltung.svg)
-
----
-
-## 6. Die VCC-Umschaltung (5V ↔ 6,25V)
-
-> **Stand Firmware:** Beim **Fast**-Algorithmus (wenn die Web-App Vcc > 5,5 V anfordert) schaltet die Firmware Pin 53 nur für jeden Brennimpuls: VCC hoch → VPP an → Impuls → VPP aus → VCC zurück auf 5 V → Verify. Das Verify läuft bei 5 V, damit das EPROM die Datenleitungen nicht mit 6,25 V in die Mega-Pins treibt (ATmega max. ca. 5,5 V). Die Einschwingzeit `VCC_SETTLE_US` (500 µs, `src/defines.h`) ist geschätzt – am Oszi nachmessen. **Standard** bleibt bei 5 V.
-
-Damit VCC im Programmiermodus auf 6,25V angehoben werden kann, baust du eine zweite High-Side-Switch-Schaltung auf — nach demselben Prinzip wie die VPP-Schaltung in Abschnitt 5, aber mit einem anderen Transistorpaar aus deinem Bestand, damit du die beiden Schaltungen auf dem Breadboard nicht verwechselst:
-
-**Für die VCC-Schaltung verwenden wir: NPN = `S8050`, PNP = `S8550`.**
-
-> **Pinout S8050 / S8550 (TO-92):** Flache Seite zu dir, Beinchen nach unten → von links nach rechts **E – B – C** (Emitter – Basis – Kollektor). Achtung: Das ist die *umgekehrte* Reihenfolge zu BC337/BC327 (dort CBE) — die beiden Schaltungen sehen auf dem Breadboard also unterschiedlich verdrahtet aus, obwohl sie funktional identisch sind.
-
-### Benötigte Bauteile:
-* 1x zweite Spannungsquelle (exakt **6,25V ± 0,25V**, einstellbar)
-* 1x **S8050** (NPN)
-* 1x **S8550** (PNP)
-* 2x 1kΩ Widerstand
-* 1x 10kΩ Widerstand
-* 1x **zweite Schottky-Diode** (z. B. 1N5819) — *zwingend erforderlich, siehe Punkt 8 unten, sonst bleibt VCC im Lesemodus stromlos!*
-
-### Aufbau:
-
-Du brauchst dafür eine **zweite Spannungsquelle mit 6,25V** (z. B. ein zweites Netzteil oder ein mit LM317 auf 6,25V eingestellter Regler). Das normale 5V des Arduinos bleibt als Standard-VCC bestehen; die 6,25V werden nur während des Programmierens dazugeschaltet.
-
-1. **Gemeinsame Masse:** GND der 6,25V-Quelle mit GND des Arduinos verbinden.
-2. **Steuereingang:** Arduino **Pin 53** über einen **1kΩ Widerstand** an die **Basis (mittleres Bein)** des **S8050**.
-3. **NPN Masse:** **Emitter (linkes Bein)** des S8050 an GND.
-4. **Verbindung:** **Kollektor (rechtes Bein)** des S8050 über einen zweiten **1kΩ Widerstand** an die **Basis (mittleres Bein)** des **S8550**.
-5. **6,25V-Eingang:** **Emitter (linkes Bein)** des S8550 an den Plus-Pol der 6,25V-Quelle.
-6. **Pull-Up:** **10kΩ Widerstand** zwischen 6,25V-Plus und Basis des S8550 (Schaltung ist im Ruhezustand sicher aus).
-7. **Ausgang:** **Kollektor (rechtes Bein)** des S8550 geht auf den **VCC-Pin (Pin 32, Chip-Label `VCC`) des EPROMs**.
-8. ⚠️ **5V-Grundversorgung (zwingend erforderlich, nicht optional!):** Verbinde eine **zweite Schottky-Diode** (z. B. 1N5819) zwischen dem 5V-Arduino-Pin und dem VCC-Pin des EPROMs — genau wie beim VPP-Dioden-Trick in Abschnitt 5:
-   * **Anode** (Ende ohne Ring) → **5V-Pin des Arduino Mega**
-   * **Kathode** (Ende mit Ring) → **Pin 32 (VCC) des EPROMs**, also an denselben Knoten, an dem auch der Kollektor des S8550 ankommt.
-
-> **Warum ist diese Diode nötig?** Solange Arduino-Pin 53 im Lesemodus `LOW` ist, sperrt der PNP-Transistor S8550 komplett — er lässt die 6,25V nicht durch. Ohne diese Diode bekommt Pin 32 des EPROMs beim Lesen **0 Volt**, der Chip ist stromlos und zieht alle Datenleitungen wie ein "totes Bauteil" auf Masse (Auslesen liefert dann nur `00`-Bytes). Mit der Diode fließen im Ruhezustand ca. 4,7V vom Arduino-5V-Pin zum EPROM-VCC — genug zum Lesen. Beim Schreiben schaltet der S8550 die vollen 6,25V auf VCC; die Diode sperrt dann automatisch rückwärts, sodass die 6,25V nicht in den 5V-Pin des Arduinos zurückfließen und ihn beschädigen können.
-
-**Wichtig für die Sequenz:** Dein Sketch muss VCC **immer zuerst** auf 6,25V bringen (Pin 53 HIGH), **bevor** VPP auf 12,75V geschaltet wird (Pin 52 HIGH) — und beim Beenden umgekehrt: erst VPP auf 0 (Pin 52 LOW), dann VCC zurück auf 5V (Pin 53 LOW).
+**Was die Firmware macht:** Nur beim **Fast**-Algorithmus (Web-App fordert Vcc > 5,5 V an) schaltet sie Pin 53 für jeden Brennimpuls: VCC hoch → VPP an → Impuls → VPP aus → VCC zurück auf 5 V → Verify. Das Verify läuft bei 5 V, damit das EPROM die Datenleitungen nicht mit 6,25 V in die Mega-Pins treibt. Die Einschwingzeit `VCC_SETTLE_US` (500 µs, `src/defines.h`) ist geschätzt – am Oszi nachmessen. **Standard** bleibt immer bei 5 V.
 
 ![VCC-Umschaltung](images/vcc_schaltung.svg)
 
-### Restliche Bauteile aus deinem Bestand (Reserve / Alternativen)
+### 4.7 Ersatz-Transistoren
 
-Falls du BC337/BC327 oder S8050/S8550 mal ersetzen musst, hier die Pinouts der übrigen Transistoren aus deiner Liste — **Achtung, teils unterschiedliche Pin-Reihenfolge**, immer vor dem Einlöten prüfen:
+Falls BC337/BC327 oder S8050/S8550 ersetzt werden müssen – **Pinout immer vor dem Einbauen prüfen**:
 
 | Typ | Polarität | TO-92 Pinout (flache Seite zu dir, Beine unten, links→rechts) |
 | :--- | :--- | :--- |
@@ -228,15 +190,24 @@ Falls du BC337/BC327 oder S8050/S8550 mal ersetzen musst, hier die Pinouts der �
 | C1815 | NPN | E – C – B |
 | A1015 | PNP | E – C – B |
 | 2N2907 | PNP | E – B – C |
-| 2N3908* | PNP | *vermutlich 2N3906 gemeint (EBC) — Aufdruck am Bauteil prüfen, „2N3908" ist keine gängige Standardbezeichnung* |
+| 2N3906 | PNP | E – B – C |
 
-*C1815/A1015 haben zudem nur max. 150mA Kollektorstrom — für diese Schaltung (wenige mA) trotzdem problemlos ausreichend, aber als Hauptschalter etwas knapper dimensioniert als BC337/BC327.*
-
----
+C1815/A1015 können nur 150 mA – für diese Schaltung (wenige mA) reicht das.
 
 ---
 
-# Firmware (Arduino Mega)
+## 5. Vor dem ersten Einsetzen: Spannungen prüfen
+
+Empfehlung, **ohne EPROM im Sockel**, mit dem Multimeter gegen GND:
+
+1. Netzteil: **A = 6,25 V**, **B = 12,75 V**, Strombegrenzung niedrig (z. B. ca. 100 mA).
+2. Mega per USB anschließen. Sockel **Pin 32** ≈ 4,7 V (über D1), **Pin 1** ≈ 4,4–4,5 V (über D2).
+3. VCC-Stufe testen: den 1-kΩ-Widerstand vor dem S8050 kurz von Pin 53 an den **5-V-Pin** des Mega stecken → Pin 32 ≈ 6,0–6,25 V (nie über 6,5 V). Dabei muss der **5-V-Pin des Mega bei 5 V bleiben** – steigt er, ist D1 falsch herum oder fehlt. Danach zurück an Pin 53.
+4. VPP-Stufe genauso mit dem Widerstand vor dem BC337 → Pin 1 ≈ 12,75 V (abzüglich Sättigungsspannung des BC327). Danach zurück an Pin 52.
+
+---
+
+## 6. Firmware flashen
 
 Die Firmware liegt in `src/` und wird mit [PlatformIO](https://platformio.org/) gebaut (`platformio.ini`, Umgebung `megaatmega2560`):
 
@@ -245,45 +216,38 @@ pio run                                   # bauen
 pio run -t upload --upload-port COM10     # flashen (COM-Port anpassen)
 ```
 
-Vor dem Flashen die Verbindung in der Web-App trennen – der COM-Port kann nur von einem Programm gleichzeitig genutzt werden.
-
-Nach dem Start meldet sich die Firmware mit 115200 Baud mit `27[C]XXXX programmer (Mega Direct)`.
-
-| Pin | Funktion |
-| :--- | :--- |
-| 22–29 (PORTA) | Daten Q0–Q7 |
-| 30–48 | Adressen A0–A18 |
-| 50 | Ē (Chip Enable) |
-| 51 | Ḡ (Output Enable) |
-| 52 | VPP_EN (12,75-V-Schaltstufe) |
-| 53 | VCC_EN (6,25-V-Schaltstufe, nur Fast) |
+Vorher die Verbindung in der Web-App trennen – der COM-Port kann nur von einem Programm gleichzeitig genutzt werden. Nach dem Start meldet sich die Firmware mit 115200 Baud mit `27[C]XXXX programmer (Mega Direct)`.
 
 ---
 
-# Web-App (Lesen & Schreiben im Browser)
+## 7. Web-App starten
 
-Die Bedienung läuft direkt im Browser über die **Web Serial API**. Kein WSL, kein VNC, keine Installation – nur Chrome oder Edge.
+Die Bedienung läuft direkt im Browser über die **Web Serial API** – nur Chrome oder Edge, keine Installation außer Python.
 
-## Starten
+**Windows:** `start-webapp.bat` doppelklicken. Startet den lokalen Webserver und öffnet die App in Chrome (sonst Edge). Fenster schließen = Server beenden.
+
+**Manuell:**
 
 ```bash
 cd web
 python -m http.server 8765 --bind 127.0.0.1
 ```
 
-Dann im Browser `http://127.0.0.1:8765/index.html` öffnen. (Web Serial braucht `localhost`/`127.0.0.1` oder HTTPS.)
+Dann `http://127.0.0.1:8765/index.html` öffnen. (Web Serial braucht `localhost`/`127.0.0.1` oder HTTPS.)
 
-## Bedienung
+---
+
+## 8. Bedienung: Lesen, Schreiben, Verify
 
 1. **Verbinden** klicken und den Port des Arduino wählen (z. B. `USB-SERIAL CH340 (COM10)`). Der Mega wird dabei neu gestartet, die App wartet auf die Meldung `27[C]XXXX programmer`.
 
    ![Port-Auswahl](images/webapp_port.png)
 2. **Typ** des EPROMs wählen (z. B. 27C4001). Algorithmus, Vcc und Vpp werden aus der Typ-Tabelle vorbelegt und können angepasst werden.
-3. **Lesen** – der Inhalt erscheint live als Hex-Dump. Danach wird angezeigt, ob das EPROM leer ist (alles `FF`). **Speichern** legt den Inhalt als `.bin` ab.
+3. **Lesen** – der Inhalt erscheint als Hex-Dump. Danach wird angezeigt, ob das EPROM leer ist (alles `FF`). **Speichern** legt den Inhalt als `.bin` ab.
 
    ![Lesen mit Live-Hex-Dump](images/webapp_lesen.png)
 4. **Datei öffnen** (`.bin`) – ist die Datei kleiner als das EPROM, wird der Rest mit `FF` aufgefüllt.
-5. **Schreiben** – brennt die Datei blockweise (32 Byte) und liest danach automatisch zur Kontrolle zurück. Bereits richtige Bytes und `FF`-Bytes werden übersprungen – ein abgebrochener Schreibvorgang kann also einfach neu gestartet werden.
+5. **Schreiben** – Algorithmus **Fast** wählen (beim 27C4001: Vcc 6,25 V, Vpp 12,75 V). Die App brennt blockweise (32 Byte) und liest danach automatisch zur Kontrolle zurück. Bereits richtige Bytes und `FF`-Bytes werden übersprungen – ein abgebrochener Schreibvorgang kann einfach neu gestartet werden.
 
    Während des Schreibens zeigt die App unter dem Balken eine Live-Zeile mit Adresse, Prozent, Tempo (B/s), Laufzeit, geschätzter Restzeit und **„letzte Antwort vor X s“**. Die Firmware meldet sich nach jedem Block; kommt länger als 5 s nichts, wird die Zeile rot („keine Antwort vom Programmer“). Alle 15 s landet eine Fortschrittszeile im Log, bei einem Fehler zusätzlich die letzten 40 Serial-Ereignisse.
 
@@ -292,15 +256,16 @@ Dann im Browser `http://127.0.0.1:8765/index.html` öffnen. (Web Serial braucht 
 
 Nur ein Programm kann den COM-Port gleichzeitig nutzen (Arduino-IDE-Monitor, PlatformIO-Monitor usw. vorher schließen).
 
-## Hinweise
+### Hinweise
 
-* Die Firmware sendet beim Lesen Hex-Text (`FF FF …`), nicht Binärdaten. Gemessen ca. 3,3 KB/s – ein 27C4001 (512 KiB) braucht damit rund 2,5–3 Minuten.
-* Schreiben: **Fast** (110-µs-Impulse, Vcc 6,25 V) schafft gemessen ca. 636 B/s. **Standard** brennt jedes Byte mit mind. 50 ms – ein voller 27C4001 dauert damit rund 7 Stunden. Die App zeigt die Schätzung vor dem Start an.
-* Das Feld **Vcc** stellt keine Spannung ein: Ab 5,5 V schaltet die Firmware bei Fast nur Pin 53 (6,25-V-Quelle über den S8550). Die 6,25 V müssen an der zweiten Netzteilquelle eingestellt sein.
-* Die Firmware misst Vcc/Vpp nicht – die Werte in der App werden nur übertragen. Die Spannungen müssen am Netzteil bzw. an den Schaltstufen stimmen.
-* Die alte Linux-Qt-GUI (WSL1 + VNC) liegt in [`archive/`](archive/README.md) und wird nicht mehr gepflegt.
+* **Fast vs. Standard:** Fast (110-µs-Impulse, Vcc 6,25 V) schafft gemessen ca. 636 B/s. Standard brennt jedes Byte mit mind. 50 ms bei 5 V – ein voller 27C4001 dauert damit rund 7 Stunden. Die App zeigt die Schätzung vor dem Start an.
+* Das Feld **Vcc** stellt keine Spannung ein: Ab 5,5 V schaltet die Firmware bei Fast nur Pin 53. Die 6,25 V müssen am Netzteil (Kanal A) eingestellt sein.
+* Die Firmware misst Vcc/Vpp nicht – die Werte in der App werden nur übertragen.
+* Lesen: Die Firmware sendet Hex-Text (`FF FF …`), gemessen ca. 3,3 KB/s – ein 27C4001 braucht rund 2,5–3 Minuten.
 
-## Beispiel: Simpsons Pinball Party (Stern)
+---
+
+## 9. Beispiel: Simpsons Pinball Party (Stern)
 
 *The Simpsons Pinball Party* (Stern, 2003) läuft auf dem **Sega/Stern-Whitestar**-System. Das Spielprogramm steckt im **CPU-Game-EPROM U210** auf der CPU/Sound-Platine. Die letzte Version ist **CPU 5.00** (`spp-cpu.500`, 1 Mbit = 128 KiB, Stand 2. Juli 2007). Laut Release-Notes setzt die CPU-Version 4.00 auch Display-ROM 4.00 oder neuer voraus – das Display-ROM also mit aktualisieren.
 
@@ -310,24 +275,58 @@ So wurde es hier gemacht:
    ```bash
    cat spp-cpu.500 spp-cpu.500 spp-cpu.500 spp-cpu.500 > spp-cpu-512k.500
    ```
-2. In der Web-App Typ **27C4001**, Algorithmus **Fast** (Vcc 6,25 V, Vpp 12,75 V), Datei öffnen, **Schreiben** – Dauer ca. 14 Minuten plus Verify.
+   Windows (cmd): `copy /b spp-cpu.500+spp-cpu.500+spp-cpu.500+spp-cpu.500 spp-cpu-512k.500`
+2. Chip mit UV löschen bzw. per **Lesen** prüfen, dass er leer ist.
+3. In der Web-App Typ **27C4001**, Algorithmus **Fast** (Vcc 6,25 V, Vpp 12,75 V), Datei öffnen, **Schreiben** – Dauer ca. 14 Minuten plus Verify.
 
 > Nicht geprüft: welche EPROM-Größen der U210-Sockel der Whitestar-Platine ohne Jumperänderung annimmt. Vor dem Einsetzen Platine/Service-Unterlagen prüfen. Alle ICs auf Whitestar-CPU/Sound-Platinen sitzen mit der **Kerbe nach unten** ([PinWiki](https://pinwiki.com/wiki/index.php/Sega/Stern_Whitestar_Repair)).
 
-Quellen: [PinWiki – Sega/Stern Whitestar Repair](https://pinwiki.com/wiki/index.php/Sega/Stern_Whitestar_Repair), [Pinside – TSPP Versionen/U210](https://pinside.com/pinball/forum/topic/tspp-another-noob-question-sorry).
+### 27C4001 (verwendet) oder 27C1001 (passende Größe)
 
-## Unterstützte EPROM-Typen
+Hier wurde ein **M27C4001** (4 Mbit) gebrannt, weil er vorhanden war. Das Image hat aber nur 1 Mbit – der U210-Platz ist laut Release-Notes ein **1M**-Platz. Ein **27C1001 / 27C010** (1 Mbit, ebenfalls 32-polig) wäre daher die passendere Wahl:
+
+| | 27C4001 (verwendet) | 27C1001 |
+| :--- | :--- | :--- |
+| Image | 4× gespiegelt (`spp-cpu-512k.500`) | Original `spp-cpu.500` direkt |
+| Brennzeit Fast | ca. 14 min | ca. 3–4 min (¼ der Daten, geschätzt) |
+| Pin 30 | A17 | NC (nicht verbunden) |
+| Pin 31 | A18 | **P** (Program-Strobe, aktiv LOW) |
+| Brennimpuls | auf **Ē** (Pin 22), Ḡ HIGH | auf **P** (Pin 31), Ē LOW, Ḡ HIGH |
+| Verify | Ē, Ḡ LOW | Ē, Ḡ LOW, **P HIGH** |
+| Vcc / Vpp beim Brennen | 6,25 V / 12,75 V | 6,25 V / 12,75 V |
+
+Pins 1–29 und 32 sind gleich belegt, die Verdrahtung bleibt also. Was **minimal anders** gemacht werden muss:
+
+1. **Firmware:** Pin 31 hängt an Mega `D48` (beim 4001 = A18). Für den 27C1001 muss die Firmware D48 als **P** behandeln: im Ruhezustand HIGH, für den Brennimpuls LOW pulsen, Ē dabei dauerhaft LOW. Das ist **noch nicht umgesetzt** – die aktuelle Firmware pulst Ē und hält D48 bei Adressen unter 128 KiB auf LOW.
+2. **Web-App:** Typ **27C1001** wählen, Algorithmus Fast. Die Typ-Tabelle setzt Vcc dort auf 5 V – von Hand auf **6,25 V** stellen, sonst schaltet die Firmware Pin 53 nicht.
+3. **Datei:** `spp-cpu.500` direkt öffnen, kein Zusammensetzen nötig.
+
+> Pin-Belegung und Betriebsarten des 27C1001 stammen aus Datenblatt-Auszügen (ST M27C1001). Vor dem Umbau die Tabelle „Operating Modes“ und Figure 2 im Original-Datenblatt prüfen.
+
+Quellen: [M27C1001 Datenblatt (ST)](https://www.komponenten.es.aau.dk/fileadmin/komponenten/Data_Sheet/Memory/M27C1001.pdf), [PinWiki – Sega/Stern Whitestar Repair](https://pinwiki.com/wiki/index.php/Sega/Stern_Whitestar_Repair), [Pinside – TSPP Versionen/U210](https://pinside.com/pinball/forum/topic/tspp-another-noob-question-sorry).
+
+---
+
+## 10. Unterstützte EPROM-Typen und Grenzen
 
 Die Web-App bietet alle Typen der Firmware an (jeweils die „Generic“-Werte für Vpp/Vcc, von Hand änderbar): 2716, 27C16, 2732, 27C32, 2764, 27C64, 27128, 27C128, 27256, 27C256, 27512, 27C512, 27C010, 27C1001, 27C020, 27C2001, 27C040, 27C4001, 27C080.
 
-**Einschränkungen des Mega-Aufbaus:**
-* Die Verdrahtung oben ist für 32-polige Chips mit dem Pinout des **M27C4001 / 27C040** gemacht. 24- und 28-polige Typen (2716 … 27512) haben ein anderes Pinout und brauchen eine eigene Verdrahtung – ungetestet.
-* Es sind nur die Adressleitungen A0–A18 verdrahtet (max. 512 KiB). Der **27C080 (1 MiB)** braucht A19 und wird mit diesem Aufbau nicht vollständig gelesen/geschrieben.
+* Die Verdrahtung ist für 32-polige Chips mit dem Pinout des **M27C4001 / 27C040** gemacht. 24- und 28-polige Typen (2716 … 27512) haben ein anderes Pinout und brauchen eine eigene Verdrahtung – ungetestet.
+* Es sind nur A0–A18 verdrahtet (max. 512 KiB). Der **27C080 (1 MiB)** braucht A19 und wird nicht vollständig gelesen/geschrieben.
 
-## Chip-Info
+![Chip-Info](images/chip.png)
 
-![CHIP](images/chip.png)
+---
 
-## Lizenz
+## 11. Projektstruktur, Herkunft, Lizenz
 
-GPL v2, siehe [LICENSE](LICENSE).
+| Ordner / Datei | Inhalt |
+| :--- | :--- |
+| `src/` | Firmware für den Arduino Mega (PlatformIO) |
+| `web/` | Web-App (`index.html`, eine Datei, keine Abhängigkeiten) |
+| `start-webapp.bat` | Startet Webserver + Browser unter Windows |
+| `images/` | Fotos, Pinout und Schaltpläne |
+
+Basiert auf dem EpromProgrammer von Ciprian Stingu (Arduino Nano + Schieberegister + Linux-Qt-GUI). Die Linux-GUI, das Nano-PCB und das Gehäuse wurden entfernt; sie sind in der Git-Historie vor diesem Umbau noch enthalten.
+
+Lizenz: GPL v2, siehe [LICENSE](LICENSE).

@@ -1,0 +1,350 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1150" width="1440" height="1150" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="1440" height="1150" fill="#fff"/>
+<text x="40" y="40" font-size="22" text-anchor="start" fill="#1d1d1b" font-weight="bold">Gesamtschaltplan: Arduino Mega 2560 + M27C4001</text>
+<text x="40" y="64" font-size="14" text-anchor="start" fill="#6b6b66" font-weight="normal">Gleiche Beschriftung = gleicher Draht. Pinbelegung wie in src/defines.h und src/io.cpp. Alle Massen (GND) verbunden.</text>
+<text x="40" y="110" font-size="18" text-anchor="start" fill="#1d1d1b" font-weight="bold">VCC-Umschaltung 5 V ↔ 6,25 V</text>
+<text x="40" y="132" font-size="13" text-anchor="start" fill="#6b6b66" font-weight="normal">Pin 53 HIGH → 6,25 V an EPROM Pin 32 (nur Fast, nur im Brennimpuls)</text>
+<rect x="260" y="320" width="80" height="80" rx="4" fill="#f5f5f4" stroke="#1d1d1b" stroke-width="2"/>
+<text x="300" y="356" font-size="14" text-anchor="middle" fill="#1d1d1b" font-weight="bold">S8050</text>
+<text x="300" y="374" font-size="12" text-anchor="middle" fill="#6b6b66" font-weight="normal">NPN</text>
+<rect x="440" y="210" width="80" height="80" rx="4" fill="#f5f5f4" stroke="#1d1d1b" stroke-width="2"/>
+<text x="480" y="246" font-size="14" text-anchor="middle" fill="#1d1d1b" font-weight="bold">S8550</text>
+<text x="480" y="264" font-size="12" text-anchor="middle" fill="#6b6b66" font-weight="normal">PNP</text>
+<rect x="40" y="349" width="73.2" height="22" rx="11" fill="#fff" stroke="#c2410c" stroke-width="1.8"/>
+<text x="76.6" y="365" font-size="13" text-anchor="middle" fill="#c2410c" font-weight="bold">Mega D53</text>
+<polyline points="120,360 170,360" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="170" y="351" width="60" height="18" rx="2" fill="#fff" stroke="#1d1d1b" stroke-width="2"/>
+<text x="200" y="345" font-size="13" text-anchor="middle" fill="#1d1d1b" font-weight="normal">R1 1 kΩ</text>
+<polyline points="230,360 260,360" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<text x="254" y="354" font-size="12" text-anchor="end" fill="#6b6b66" font-weight="normal">B</text>
+<text x="306" y="414" font-size="12" text-anchor="start" fill="#6b6b66" font-weight="normal">E</text>
+<polyline points="300,400 300,410" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="300,410 300,420" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="288,420 312,420" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="293,425 307,425" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="298,430 302,430" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<text x="306" y="314" font-size="12" text-anchor="start" fill="#6b6b66" font-weight="normal">C</text>
+<polyline points="300,320 300,250 330,250" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="330" y="241" width="60" height="18" rx="2" fill="#fff" stroke="#1d1d1b" stroke-width="2"/>
+<text x="360" y="235" font-size="13" text-anchor="middle" fill="#1d1d1b" font-weight="normal">R2 1 kΩ</text>
+<polyline points="390,250 440,250" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<text x="434" y="244" font-size="12" text-anchor="end" fill="#6b6b66" font-weight="normal">B</text>
+<text x="486" y="204" font-size="12" text-anchor="start" fill="#6b6b66" font-weight="normal">E</text>
+<polyline points="480,210 480,170" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="410,170 560,170" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<rect x="560" y="159" width="169.4" height="22" rx="11" fill="#fff" stroke="#dc2626" stroke-width="1.8"/>
+<text x="644.7" y="175" font-size="13" text-anchor="middle" fill="#dc2626" font-weight="bold">+6,25 V (Netzteil A+)</text>
+<circle cx="480" cy="170" r="4" fill="#dc2626"/>
+<polyline points="410,170 410,172" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="401" y="172" width="18" height="40" rx="2" fill="#fff" stroke="#1d1d1b" stroke-width="2"/>
+<text x="426" y="197" font-size="13" text-anchor="start" fill="#1d1d1b" font-weight="normal">R3 10 kΩ</text>
+<polyline points="410,212 410,250" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="410" cy="250" r="4" fill="#1d1d1b"/>
+<text x="486" y="304" font-size="12" text-anchor="start" fill="#6b6b66" font-weight="normal">C</text>
+<polyline points="480,290 480,450" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="480" cy="450" r="4" fill="#dc2626"/>
+<polyline points="480,450 560,450" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<rect x="560" y="439" width="147.20000000000002" height="22" rx="11" fill="#fff" stroke="#dc2626" stroke-width="1.8"/>
+<text x="633.6" y="455" font-size="13" text-anchor="middle" fill="#dc2626" font-weight="bold">VCC_EPROM → Pin 32</text>
+<rect x="134.2" y="489" width="65.80000000000001" height="22" rx="11" fill="#fff" stroke="#dc2626" stroke-width="1.8"/>
+<text x="167.1" y="505" font-size="13" text-anchor="middle" fill="#dc2626" font-weight="bold">Mega 5V</text>
+<polyline points="200,500 330.0,500" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="350.0,500 480,500" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<polygon points="330.0,490 330.0,510 350.0,500" fill="#dc2626"/>
+<polyline points="350.0,489 350.0,511" fill="none" stroke="#dc2626" stroke-width="3" stroke-linejoin="round"/>
+<text x="340.0" y="528" font-size="13" text-anchor="middle" fill="#1d1d1b" font-weight="normal">D1 1N5819</text>
+<polyline points="480,500 480,450" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="480" cy="500" r="4" fill="#dc2626"/>
+<text x="730" y="110" font-size="18" text-anchor="start" fill="#1d1d1b" font-weight="bold">VPP-Schaltung 12,75 V</text>
+<text x="730" y="132" font-size="13" text-anchor="start" fill="#6b6b66" font-weight="normal">Pin 52 HIGH → 12,75 V an EPROM Pin 1</text>
+<rect x="950" y="320" width="80" height="80" rx="4" fill="#f5f5f4" stroke="#1d1d1b" stroke-width="2"/>
+<text x="990" y="356" font-size="14" text-anchor="middle" fill="#1d1d1b" font-weight="bold">BC337</text>
+<text x="990" y="374" font-size="12" text-anchor="middle" fill="#6b6b66" font-weight="normal">NPN</text>
+<rect x="1130" y="210" width="80" height="80" rx="4" fill="#f5f5f4" stroke="#1d1d1b" stroke-width="2"/>
+<text x="1170" y="246" font-size="14" text-anchor="middle" fill="#1d1d1b" font-weight="bold">BC327</text>
+<text x="1170" y="264" font-size="12" text-anchor="middle" fill="#6b6b66" font-weight="normal">PNP</text>
+<rect x="730" y="349" width="73.2" height="22" rx="11" fill="#fff" stroke="#c2410c" stroke-width="1.8"/>
+<text x="766.6" y="365" font-size="13" text-anchor="middle" fill="#c2410c" font-weight="bold">Mega D52</text>
+<polyline points="810,360 860,360" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="860" y="351" width="60" height="18" rx="2" fill="#fff" stroke="#1d1d1b" stroke-width="2"/>
+<text x="890" y="345" font-size="13" text-anchor="middle" fill="#1d1d1b" font-weight="normal">R1 1 kΩ</text>
+<polyline points="920,360 950,360" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<text x="944" y="354" font-size="12" text-anchor="end" fill="#6b6b66" font-weight="normal">B</text>
+<text x="996" y="414" font-size="12" text-anchor="start" fill="#6b6b66" font-weight="normal">E</text>
+<polyline points="990,400 990,410" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="990,410 990,420" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="978,420 1002,420" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="983,425 997,425" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="988,430 992,430" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<text x="996" y="314" font-size="12" text-anchor="start" fill="#6b6b66" font-weight="normal">C</text>
+<polyline points="990,320 990,250 1020,250" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1020" y="241" width="60" height="18" rx="2" fill="#fff" stroke="#1d1d1b" stroke-width="2"/>
+<text x="1050" y="235" font-size="13" text-anchor="middle" fill="#1d1d1b" font-weight="normal">R2 1 kΩ</text>
+<polyline points="1080,250 1130,250" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<text x="1124" y="244" font-size="12" text-anchor="end" fill="#6b6b66" font-weight="normal">B</text>
+<text x="1176" y="204" font-size="12" text-anchor="start" fill="#6b6b66" font-weight="normal">E</text>
+<polyline points="1170,210 1170,170" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1100,170 1250,170" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1250" y="159" width="176.8" height="22" rx="11" fill="#fff" stroke="#dc2626" stroke-width="1.8"/>
+<text x="1338.4" y="175" font-size="13" text-anchor="middle" fill="#dc2626" font-weight="bold">+12,75 V (Netzteil B+)</text>
+<circle cx="1170" cy="170" r="4" fill="#dc2626"/>
+<polyline points="1100,170 1100,172" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1091" y="172" width="18" height="40" rx="2" fill="#fff" stroke="#1d1d1b" stroke-width="2"/>
+<text x="1116" y="197" font-size="13" text-anchor="start" fill="#1d1d1b" font-weight="normal">R3 10 kΩ</text>
+<polyline points="1100,212 1100,250" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1100" cy="250" r="4" fill="#1d1d1b"/>
+<text x="1176" y="304" font-size="12" text-anchor="start" fill="#6b6b66" font-weight="normal">C</text>
+<polyline points="1170,290 1170,450" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1170" cy="450" r="4" fill="#dc2626"/>
+<polyline points="1170,450 1250,450" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1250" y="439" width="139.8" height="22" rx="11" fill="#fff" stroke="#dc2626" stroke-width="1.8"/>
+<text x="1319.9" y="455" font-size="13" text-anchor="middle" fill="#dc2626" font-weight="bold">VPP_EPROM → Pin 1</text>
+<rect x="809.4" y="489" width="80.60000000000001" height="22" rx="11" fill="#fff" stroke="#dc2626" stroke-width="1.8"/>
+<text x="849.6999999999999" y="505" font-size="13" text-anchor="middle" fill="#dc2626" font-weight="bold">VCC_EPROM</text>
+<polyline points="890,500 1020.0,500" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1040.0,500 1170,500" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<polygon points="1020.0,490 1020.0,510 1040.0,500" fill="#dc2626"/>
+<polyline points="1040.0,489 1040.0,511" fill="none" stroke="#dc2626" stroke-width="3" stroke-linejoin="round"/>
+<text x="1030.0" y="528" font-size="13" text-anchor="middle" fill="#1d1d1b" font-weight="normal">D2 1N5819</text>
+<polyline points="1170,500 1170,450" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1170" cy="500" r="4" fill="#dc2626"/>
+<text x="40" y="600" font-size="13" text-anchor="start" fill="#6b6b66" font-weight="normal">Pinout TO-92 (flache Seite vorn, Beine unten): S8050/S8550 = E – B – C · BC337/BC327 = C – B – E</text>
+<polyline points="30,620 1410,620" fill="none" stroke="#d6d3d1" stroke-width="1" stroke-linejoin="round"/>
+<rect x="660" y="660" width="220" height="468" rx="4" fill="#262626" stroke="#1d1d1b" stroke-width="2"/>
+<path d="M754.0,660 a16,16 0 0,0 32,0" fill="#fff" stroke="#1d1d1b" stroke-width="2"/>
+<text x="770.0" y="888.0" font-size="18" text-anchor="middle" fill="#fff" font-weight="bold">M27C4001</text>
+<text x="770.0" y="910.0" font-size="12" text-anchor="middle" fill="#d6d3d1" font-weight="normal">(Kerbe oben, Pin 1 links oben)</text>
+<polyline points="590,684 660,684" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="679" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="680" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">1</text>
+<text x="668" y="689" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">VPP</text>
+<rect x="509.4" y="673" width="80.60000000000001" height="22" rx="11" fill="#fff" stroke="#dc2626" stroke-width="1.8"/>
+<text x="549.6999999999999" y="689" font-size="13" text-anchor="middle" fill="#dc2626" font-weight="bold">VPP_EPROM</text>
+<polyline points="590,712 660,712" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="707" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="708" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">2</text>
+<text x="668" y="717" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">A16</text>
+<rect x="516.8" y="701" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="553.4" y="717" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D46</text>
+<polyline points="590,740 660,740" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="735" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="736" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">3</text>
+<text x="668" y="745" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">A15</text>
+<rect x="516.8" y="729" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="553.4" y="745" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D45</text>
+<polyline points="590,768 660,768" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="763" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="764" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">4</text>
+<text x="668" y="773" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">A12</text>
+<rect x="516.8" y="757" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="553.4" y="773" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D42</text>
+<polyline points="590,796 660,796" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="791" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="792" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">5</text>
+<text x="668" y="801" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">A7</text>
+<rect x="516.8" y="785" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="553.4" y="801" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D37</text>
+<polyline points="590,824 660,824" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="819" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="820" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">6</text>
+<text x="668" y="829" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">A6</text>
+<rect x="516.8" y="813" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="553.4" y="829" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D36</text>
+<polyline points="590,852 660,852" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="847" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="848" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">7</text>
+<text x="668" y="857" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">A5</text>
+<rect x="516.8" y="841" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="553.4" y="857" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D35</text>
+<polyline points="590,880 660,880" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="875" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="876" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">8</text>
+<text x="668" y="885" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">A4</text>
+<rect x="516.8" y="869" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="553.4" y="885" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D34</text>
+<polyline points="590,908 660,908" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="903" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="904" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">9</text>
+<text x="668" y="913" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">A3</text>
+<rect x="516.8" y="897" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="553.4" y="913" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D33</text>
+<polyline points="590,936 660,936" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="931" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="932" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">10</text>
+<text x="668" y="941" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">A2</text>
+<rect x="516.8" y="925" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="553.4" y="941" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D32</text>
+<polyline points="590,964 660,964" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="959" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="960" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">11</text>
+<text x="668" y="969" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">A1</text>
+<rect x="516.8" y="953" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="553.4" y="969" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D31</text>
+<polyline points="590,992 660,992" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="987" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="988" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">12</text>
+<text x="668" y="997" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">A0</text>
+<rect x="516.8" y="981" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="553.4" y="997" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D30</text>
+<polyline points="590,1020 660,1020" fill="none" stroke="#15803d" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="1015" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="1016" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">13</text>
+<text x="668" y="1025" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">Q0</text>
+<rect x="516.8" y="1009" width="73.2" height="22" rx="11" fill="#fff" stroke="#15803d" stroke-width="1.8"/>
+<text x="553.4" y="1025" font-size="13" text-anchor="middle" fill="#15803d" font-weight="bold">Mega D22</text>
+<polyline points="590,1048 660,1048" fill="none" stroke="#15803d" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="1043" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="1044" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">14</text>
+<text x="668" y="1053" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">Q1</text>
+<rect x="516.8" y="1037" width="73.2" height="22" rx="11" fill="#fff" stroke="#15803d" stroke-width="1.8"/>
+<text x="553.4" y="1053" font-size="13" text-anchor="middle" fill="#15803d" font-weight="bold">Mega D23</text>
+<polyline points="590,1076 660,1076" fill="none" stroke="#15803d" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="1071" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="1072" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">15</text>
+<text x="668" y="1081" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">Q2</text>
+<rect x="516.8" y="1065" width="73.2" height="22" rx="11" fill="#fff" stroke="#15803d" stroke-width="1.8"/>
+<text x="553.4" y="1081" font-size="13" text-anchor="middle" fill="#15803d" font-weight="bold">Mega D24</text>
+<polyline points="590,1104 660,1104" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="652" y="1099" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="648" y="1100" font-size="11" text-anchor="end" fill="#6b6b66" font-weight="normal">16</text>
+<text x="668" y="1109" font-size="13" text-anchor="start" fill="#fff" font-weight="normal">VSS</text>
+<rect x="553.8" y="1093" width="36.2" height="22" rx="11" fill="#fff" stroke="#1d1d1b" stroke-width="1.8"/>
+<text x="571.9" y="1109" font-size="13" text-anchor="middle" fill="#1d1d1b" font-weight="bold">GND</text>
+<polyline points="880,1104 950,1104" fill="none" stroke="#15803d" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="1099" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="1100" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">17</text>
+<text x="872" y="1109" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">Q3</text>
+<rect x="950" y="1093" width="73.2" height="22" rx="11" fill="#fff" stroke="#15803d" stroke-width="1.8"/>
+<text x="986.6" y="1109" font-size="13" text-anchor="middle" fill="#15803d" font-weight="bold">Mega D25</text>
+<polyline points="880,1076 950,1076" fill="none" stroke="#15803d" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="1071" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="1072" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">18</text>
+<text x="872" y="1081" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">Q4</text>
+<rect x="950" y="1065" width="73.2" height="22" rx="11" fill="#fff" stroke="#15803d" stroke-width="1.8"/>
+<text x="986.6" y="1081" font-size="13" text-anchor="middle" fill="#15803d" font-weight="bold">Mega D26</text>
+<polyline points="880,1048 950,1048" fill="none" stroke="#15803d" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="1043" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="1044" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">19</text>
+<text x="872" y="1053" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">Q5</text>
+<rect x="950" y="1037" width="73.2" height="22" rx="11" fill="#fff" stroke="#15803d" stroke-width="1.8"/>
+<text x="986.6" y="1053" font-size="13" text-anchor="middle" fill="#15803d" font-weight="bold">Mega D27</text>
+<polyline points="880,1020 950,1020" fill="none" stroke="#15803d" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="1015" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="1016" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">20</text>
+<text x="872" y="1025" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">Q6</text>
+<rect x="950" y="1009" width="73.2" height="22" rx="11" fill="#fff" stroke="#15803d" stroke-width="1.8"/>
+<text x="986.6" y="1025" font-size="13" text-anchor="middle" fill="#15803d" font-weight="bold">Mega D28</text>
+<polyline points="880,992 950,992" fill="none" stroke="#15803d" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="987" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="988" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">21</text>
+<text x="872" y="997" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">Q7</text>
+<rect x="950" y="981" width="73.2" height="22" rx="11" fill="#fff" stroke="#15803d" stroke-width="1.8"/>
+<text x="986.6" y="997" font-size="13" text-anchor="middle" fill="#15803d" font-weight="bold">Mega D29</text>
+<polyline points="880,964 950,964" fill="none" stroke="#c2410c" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="959" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="960" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">22</text>
+<text x="872" y="969" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">Ē</text>
+<rect x="950" y="953" width="73.2" height="22" rx="11" fill="#fff" stroke="#c2410c" stroke-width="1.8"/>
+<text x="986.6" y="969" font-size="13" text-anchor="middle" fill="#c2410c" font-weight="bold">Mega D50</text>
+<polyline points="880,936 950,936" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="931" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="932" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">23</text>
+<text x="872" y="941" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">A10</text>
+<rect x="950" y="925" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="986.6" y="941" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D40</text>
+<polyline points="880,908 950,908" fill="none" stroke="#c2410c" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="903" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="904" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">24</text>
+<text x="872" y="913" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">Ḡ</text>
+<rect x="950" y="897" width="73.2" height="22" rx="11" fill="#fff" stroke="#c2410c" stroke-width="1.8"/>
+<text x="986.6" y="913" font-size="13" text-anchor="middle" fill="#c2410c" font-weight="bold">Mega D51</text>
+<polyline points="880,880 950,880" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="875" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="876" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">25</text>
+<text x="872" y="885" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">A11</text>
+<rect x="950" y="869" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="986.6" y="885" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D41</text>
+<polyline points="880,852 950,852" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="847" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="848" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">26</text>
+<text x="872" y="857" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">A9</text>
+<rect x="950" y="841" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="986.6" y="857" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D39</text>
+<polyline points="880,824 950,824" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="819" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="820" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">27</text>
+<text x="872" y="829" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">A8</text>
+<rect x="950" y="813" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="986.6" y="829" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D38</text>
+<polyline points="880,796 950,796" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="791" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="792" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">28</text>
+<text x="872" y="801" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">A13</text>
+<rect x="950" y="785" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="986.6" y="801" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D43</text>
+<polyline points="880,768 950,768" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="763" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="764" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">29</text>
+<text x="872" y="773" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">A14</text>
+<rect x="950" y="757" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="986.6" y="773" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D44</text>
+<polyline points="880,740 950,740" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="735" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="736" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">30</text>
+<text x="872" y="745" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">A17</text>
+<rect x="950" y="729" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="986.6" y="745" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D47</text>
+<polyline points="880,712 950,712" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="707" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="708" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">31</text>
+<text x="872" y="717" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">A18</text>
+<rect x="950" y="701" width="73.2" height="22" rx="11" fill="#fff" stroke="#2563eb" stroke-width="1.8"/>
+<text x="986.6" y="717" font-size="13" text-anchor="middle" fill="#2563eb" font-weight="bold">Mega D48</text>
+<polyline points="880,684 950,684" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<rect x="880" y="679" width="8" height="10" rx="1" fill="#a8a29e" stroke="#a8a29e" stroke-width="1"/>
+<text x="892" y="680" font-size="11" text-anchor="start" fill="#6b6b66" font-weight="normal">32</text>
+<text x="872" y="689" font-size="13" text-anchor="end" fill="#fff" font-weight="normal">VCC</text>
+<rect x="950" y="673" width="80.60000000000001" height="22" rx="11" fill="#fff" stroke="#dc2626" stroke-width="1.8"/>
+<text x="990.3" y="689" font-size="13" text-anchor="middle" fill="#dc2626" font-weight="bold">VCC_EPROM</text>
+<rect x="40" y="660" width="210" height="220" rx="4" fill="#f5f5f4" stroke="#1d1d1b" stroke-width="2"/>
+<text x="54" y="688" font-size="15" text-anchor="start" fill="#1d1d1b" font-weight="bold">Labornetzteil (2 Kanäle)</text>
+<text x="54" y="730" font-size="14" text-anchor="start" fill="#1d1d1b" font-weight="bold">Output A: 6,25 V</text>
+<text x="54" y="748" font-size="12" text-anchor="start" fill="#6b6b66" font-weight="normal">Strombegrenzung niedrig</text>
+<text x="54" y="810" font-size="14" text-anchor="start" fill="#1d1d1b" font-weight="bold">Output B: 12,75 V</text>
+<text x="54" y="828" font-size="12" text-anchor="start" fill="#6b6b66" font-weight="normal">Strombegrenzung niedrig</text>
+<polyline points="250,720 270,720" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<rect x="270" y="709" width="169.4" height="22" rx="11" fill="#fff" stroke="#dc2626" stroke-width="1.8"/>
+<text x="354.7" y="725" font-size="13" text-anchor="middle" fill="#dc2626" font-weight="bold">+6,25 V (Netzteil A+)</text>
+<polyline points="250,755 270,755" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="270" y="744" width="36.2" height="22" rx="11" fill="#fff" stroke="#1d1d1b" stroke-width="1.8"/>
+<text x="288.1" y="760" font-size="13" text-anchor="middle" fill="#1d1d1b" font-weight="bold">GND</text>
+<polyline points="250,800 270,800" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<rect x="270" y="789" width="176.8" height="22" rx="11" fill="#fff" stroke="#dc2626" stroke-width="1.8"/>
+<text x="358.4" y="805" font-size="13" text-anchor="middle" fill="#dc2626" font-weight="bold">+12,75 V (Netzteil B+)</text>
+<polyline points="250,835 270,835" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="270" y="824" width="36.2" height="22" rx="11" fill="#fff" stroke="#1d1d1b" stroke-width="1.8"/>
+<text x="288.1" y="840" font-size="13" text-anchor="middle" fill="#1d1d1b" font-weight="bold">GND</text>
+<text x="40" y="910" font-size="13" text-anchor="start" fill="#6b6b66" font-weight="normal">A wird nur bei Fast gebraucht.</text>
+<rect x="1120" y="660" width="280" height="160" rx="4" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="1134" y="688" font-size="15" text-anchor="start" fill="#1d1d1b" font-weight="bold">Arduino Mega 2560</text>
+<text x="1134" y="710" font-size="12" text-anchor="start" fill="#6b6b66" font-weight="normal">USB → PC (Web-App, 115200 Baud)</text>
+<text x="1134" y="750" font-size="13" text-anchor="start" fill="#1d1d1b" font-weight="normal">5V-Pin</text>
+<polyline points="1230,745 1260,745" fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1260" y="734" width="65.80000000000001" height="22" rx="11" fill="#fff" stroke="#dc2626" stroke-width="1.8"/>
+<text x="1292.9" y="750" font-size="13" text-anchor="middle" fill="#dc2626" font-weight="bold">Mega 5V</text>
+<text x="1134" y="790" font-size="13" text-anchor="start" fill="#1d1d1b" font-weight="normal">GND-Pin</text>
+<polyline points="1230,785 1260,785" fill="none" stroke="#1d1d1b" stroke-width="2" stroke-linejoin="round"/>
+<rect x="1260" y="774" width="36.2" height="22" rx="11" fill="#fff" stroke="#1d1d1b" stroke-width="1.8"/>
+<text x="1278.1" y="790" font-size="13" text-anchor="middle" fill="#1d1d1b" font-weight="bold">GND</text>
+<text x="1120" y="850" font-size="15" text-anchor="start" fill="#1d1d1b" font-weight="bold">Mega-Pins</text>
+<text x="1120" y="874" font-size="13" text-anchor="start" fill="#15803d" font-weight="normal">D22–D29 → Q0–Q7 (PORTA)</text>
+<text x="1120" y="896" font-size="13" text-anchor="start" fill="#2563eb" font-weight="normal">D30–D48 → A0–A18</text>
+<text x="1120" y="918" font-size="13" text-anchor="start" fill="#c2410c" font-weight="normal">D50 → Ē (Pin 22), D51 → Ḡ (Pin 24)</text>
+<text x="1120" y="940" font-size="13" text-anchor="start" fill="#c2410c" font-weight="normal">D52 → VPP-Schaltung</text>
+<text x="1120" y="962" font-size="13" text-anchor="start" fill="#c2410c" font-weight="normal">D53 → VCC-Umschaltung</text>
+<text x="1120" y="984" font-size="13" text-anchor="start" fill="#6b6b66" font-weight="normal">D49 bleibt frei</text>
+<text x="1120" y="1020" font-size="13" text-anchor="start" fill="#6b6b66" font-weight="normal">D1: Ring zu VCC_EPROM.</text>
+<text x="1120" y="1040" font-size="13" text-anchor="start" fill="#6b6b66" font-weight="normal">D2: Ring zu VPP_EPROM.</text>
+<text x="1120" y="1060" font-size="13" text-anchor="start" fill="#6b6b66" font-weight="normal">Reihenfolge Firmware: VCC vor VPP an,</text>
+<text x="1120" y="1080" font-size="13" text-anchor="start" fill="#6b6b66" font-weight="normal">VPP vor VCC aus.</text>
+</svg>
