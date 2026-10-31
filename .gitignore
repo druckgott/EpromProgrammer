@@ -5,6 +5,7 @@
 .vscode/ipch
 archive/gui/build
 statistic_claude/*
+statistic_claude/
 
 ROM/
 start-webapp.bat

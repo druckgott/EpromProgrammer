@@ -2,6 +2,8 @@
 
 UV-EPROMs (getestet mit **ST M27C4001**) auslesen und beschreiben mit einem **Arduino Mega 2560**, direkt verdrahtet ohne Schieberegister. Bedient wird das Ganze über eine **Web-App im Browser** (Chrome/Edge, Web Serial API) – direkt unter Windows, ohne WSL oder Treiber-Umwege.
 
+Anwendungsbeispiel: das CPU-Game-ROM eines Flippers **The Simpsons Pinball Party (Stern, 2003, Whitestar-System)** auf einen M27C4001 brennen – siehe [Beispiel: Simpsons Pinball Party](#beispiel-simpsons-pinball-party-stern).
+
 Basiert auf dem EpromProgrammer von Ciprian Stingu (Arduino Nano + Schieberegister + Linux-Qt-GUI), Lizenz GPL v2. Das ursprüngliche Projekt ist unter [`archive/`](archive/README.md) dokumentiert.
 
 ## Stand
@@ -11,8 +13,9 @@ Basiert auf dem EpromProgrammer von Ciprian Stingu (Arduino Nano + Schieberegist
 | Verbinden über Web-App (COM-Port, CH340) | ✅ funktioniert |
 | Lesen 27C4001 (512 KiB) inkl. Live-Hex-Dump, Leer-Prüfung | ✅ funktioniert |
 | Speichern als `.bin` | ✅ eingebaut |
-| Schreiben + automatisches Verify | ⚠️ eingebaut, **noch nicht am Gerät getestet** |
-| VCC-Umschaltung 5 V ↔ 6,25 V (Pin 53) | ⚠️ in der Firmware umgesetzt (nur Fast), **noch nicht nachgemessen** |
+| Schreiben (Fast) mit Live-Fortschritt | ✅ läuft am Gerät, gemessen ca. 636 B/s (27C4001 ≈ 14 min) |
+| Automatisches Verify nach dem Schreiben | ⚠️ eingebaut, kompletter Durchlauf am Gerät noch ausstehend |
+| VCC-Umschaltung 5 V ↔ 6,25 V (Pin 53) | ⚠️ in Betrieb (Fast), Umschaltzeit **noch nicht mit dem Oszi nachgemessen** |
 | Spannungsmessung Vcc/Vpp | ❌ nicht vorhanden – die Firmware meldet einfach die angeforderten Werte zurück |
 
 ## Projektstruktur
@@ -280,7 +283,11 @@ Dann im Browser `http://127.0.0.1:8765/index.html` öffnen. (Web Serial braucht 
 
    ![Lesen mit Live-Hex-Dump](images/webapp_lesen.png)
 4. **Datei öffnen** (`.bin`) – ist die Datei kleiner als das EPROM, wird der Rest mit `FF` aufgefüllt.
-5. **Schreiben** – brennt die Datei blockweise (32 Byte) und liest danach automatisch zur Kontrolle zurück.
+5. **Schreiben** – brennt die Datei blockweise (32 Byte) und liest danach automatisch zur Kontrolle zurück. Bereits richtige Bytes und `FF`-Bytes werden übersprungen – ein abgebrochener Schreibvorgang kann also einfach neu gestartet werden.
+
+   Während des Schreibens zeigt die App unter dem Balken eine Live-Zeile mit Adresse, Prozent, Tempo (B/s), Laufzeit, geschätzter Restzeit und **„letzte Antwort vor X s“**. Die Firmware meldet sich nach jedem Block; kommt länger als 5 s nichts, wird die Zeile rot („keine Antwort vom Programmer“). Alle 15 s landet eine Fortschrittszeile im Log, bei einem Fehler zusätzlich die letzten 40 Serial-Ereignisse.
+
+   ![Schreiben mit Live-Fortschritt](images/webapp_schreiben.png)
 6. **Verify** – vergleicht das EPROM mit der geladenen Datei und meldet die erste Abweichung.
 
 Nur ein Programm kann den COM-Port gleichzeitig nutzen (Arduino-IDE-Monitor, PlatformIO-Monitor usw. vorher schließen).
@@ -288,8 +295,26 @@ Nur ein Programm kann den COM-Port gleichzeitig nutzen (Arduino-IDE-Monitor, Pla
 ## Hinweise
 
 * Die Firmware sendet beim Lesen Hex-Text (`FF FF …`), nicht Binärdaten. Gemessen ca. 3,3 KB/s – ein 27C4001 (512 KiB) braucht damit rund 2,5–3 Minuten.
+* Schreiben: **Fast** (110-µs-Impulse, Vcc 6,25 V) schafft gemessen ca. 636 B/s. **Standard** brennt jedes Byte mit mind. 50 ms – ein voller 27C4001 dauert damit rund 7 Stunden. Die App zeigt die Schätzung vor dem Start an.
+* Das Feld **Vcc** stellt keine Spannung ein: Ab 5,5 V schaltet die Firmware bei Fast nur Pin 53 (6,25-V-Quelle über den S8550). Die 6,25 V müssen an der zweiten Netzteilquelle eingestellt sein.
 * Die Firmware misst Vcc/Vpp nicht – die Werte in der App werden nur übertragen. Die Spannungen müssen am Netzteil bzw. an den Schaltstufen stimmen.
 * Die alte Linux-Qt-GUI (WSL1 + VNC) liegt in [`archive/`](archive/README.md) und wird nicht mehr gepflegt.
+
+## Beispiel: Simpsons Pinball Party (Stern)
+
+*The Simpsons Pinball Party* (Stern, 2003) läuft auf dem **Sega/Stern-Whitestar**-System. Das Spielprogramm steckt im **CPU-Game-EPROM U210** auf der CPU/Sound-Platine. Die letzte Version ist **CPU 5.00** (`spp-cpu.500`, 1 Mbit = 128 KiB, Stand 2. Juli 2007). Laut Release-Notes setzt die CPU-Version 4.00 auch Display-ROM 4.00 oder neuer voraus – das Display-ROM also mit aktualisieren.
+
+So wurde es hier gemacht:
+
+1. Das 128-KiB-Image 4× hintereinander zu 512 KiB zusammengesetzt (`spp-cpu-512k.500`), damit es auf einem **M27C4001** unabhängig von den oberen Adressleitungen gleich aussieht:
+   ```bash
+   cat spp-cpu.500 spp-cpu.500 spp-cpu.500 spp-cpu.500 > spp-cpu-512k.500
+   ```
+2. In der Web-App Typ **27C4001**, Algorithmus **Fast** (Vcc 6,25 V, Vpp 12,75 V), Datei öffnen, **Schreiben** – Dauer ca. 14 Minuten plus Verify.
+
+> Nicht geprüft: welche EPROM-Größen der U210-Sockel der Whitestar-Platine ohne Jumperänderung annimmt. Vor dem Einsetzen Platine/Service-Unterlagen prüfen. Alle ICs auf Whitestar-CPU/Sound-Platinen sitzen mit der **Kerbe nach unten** ([PinWiki](https://pinwiki.com/wiki/index.php/Sega/Stern_Whitestar_Repair)).
+
+Quellen: [PinWiki – Sega/Stern Whitestar Repair](https://pinwiki.com/wiki/index.php/Sega/Stern_Whitestar_Repair), [Pinside – TSPP Versionen/U210](https://pinside.com/pinball/forum/topic/tspp-another-noob-question-sorry).
 
 ## Unterstützte EPROM-Typen
 

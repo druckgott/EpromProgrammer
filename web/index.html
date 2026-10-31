@@ -23,7 +23,11 @@
   button:disabled { opacity:.45; cursor:default; }
   #status { font-weight:600; }
   #status.ok { color:var(--ok); } #status.err { color:var(--err); }
-  progress { width:100%; height:10px; }
+  .progrow { display:flex; align-items:center; gap:8px; }
+  progress { flex:1; height:10px; }
+  #act { font:12px ui-monospace, Consolas, monospace; margin:4px 0; min-height:1.3em; }
+  #act.err { color:var(--err); font-weight:600; }
+  #pct { min-width:4.5em; text-align:right; font-variant-numeric:tabular-nums; }
   pre { margin:0; font:12px/1.35 ui-monospace, Consolas, monospace; overflow:auto; }
   #log { max-height:160px; white-space:pre-wrap; }
   #hex { height:60vh; }
@@ -55,7 +59,7 @@
     <span id="info"></span>
   </div>
 
-  <div class="card"><progress id="prog" value="0" max="1"></progress><pre id="log"></pre></div>
+  <div class="card"><div class="progrow"><progress id="prog" value="0" max="1"></progress><span id="pct"></span></div><div id="act"></div><pre id="log"></pre></div>
   <div class="card"><pre id="hex"></pre></div>
 </main>
 
@@ -118,7 +122,38 @@ onTypeChange();
 
 function log(msg) { const l = $('log'); l.textContent += msg + '\n'; l.scrollTop = l.scrollHeight; }
 function setStatus(msg, cls = '') { $('status').textContent = msg; $('status').className = cls; }
-function progress(v, max) { $('prog').max = max; $('prog').value = v; }
+function progress(v, max) {
+  $('prog').max = max; $('prog').value = v;
+  $('pct').textContent = v ? (100 * Math.min(v, max) / max).toFixed(2) + ' %' : '';
+  if (job) { job.v = Math.min(v, max); job.max = max; }
+}
+// Laufender Vorgang: Fortschritt, Tempo, Restzeit und Zeit seit der letzten Antwort des Programmers
+let job = null, lastRx = 0;
+const LOG_EVERY_S = 15; // so oft eine Fortschrittszeile ins Log
+function fmtT(s) {
+  s = Math.max(0, Math.round(s));
+  const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, sec = String(s % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
+}
+const hx = v => '0x' + v.toString(16).toUpperCase().padStart(5, '0');
+function startPhase(name) {
+  if (!job) return;
+  Object.assign(job, { phase: name, p0: performance.now(), v: 0, max: 1, lastLog: performance.now() });
+  log(`${name} gestartet.`);
+}
+function jobLine() {
+  const { v, max, phase } = job, el = (performance.now() - job.p0) / 1000, rate = el > 0 ? v / el : 0;
+  const rest = rate > 0 && v ? '~' + fmtT((max - v) / rate) : '?';
+  return `${phase}: ${hx(v)} / ${hx(max)} (${(100 * v / max).toFixed(2)} %) · ${rate.toFixed(0)} B/s · seit ${fmtT(el)} · Rest ${rest}`;
+}
+function tick() {
+  if (!job) return;
+  const now = performance.now(), idle = (now - lastRx) / 1000, a = $('act');
+  a.textContent = `${jobLine()} · letzte Antwort vor ${idle.toFixed(1)} s` + (idle > 5 ? '  ⚠ keine Antwort vom Programmer!' : '');
+  a.className = idle > 5 ? 'err' : '';
+  if (now - job.lastLog >= LOG_EVERY_S * 1000) { job.lastLog = now; log(`[${fmtT((now - job.t0) / 1000)}] ${jobLine()}`); }
+}
+setInterval(tick, 500);
 function updateButtons() {
   const c = !!port && !busy;
   $('btnRead').disabled = !c;
@@ -150,6 +185,7 @@ async function pump() {
       if (done) break;
       const t = dec.decode(value);
       tr('<', t);
+      lastRx = performance.now();
       rx += t;
       if (wake) wake();
     }
@@ -228,6 +264,7 @@ async function selectType() {
 async function readEprom() {
   const size = eprom()[2];
   await selectType();
+  startPhase('Lesen');
   rx = '';
   await send('@CMDREAD');
   await waitFor(OK, 3000);
@@ -267,6 +304,7 @@ async function writeEprom(data) {
   await send('@CMDWRIT' + vcc + vpp + String(algo).padStart(2, ' '));
   await waitFor(OK, 3000);
   await waitFor('@RSPWRIT\r\n', 3000);
+  startPhase('Schreiben');
   for (let i = 0; i < data.length; i += BLOCK) {
     await waitFor('@RSPBLCK', 5000);
     const block = parseInt(await waitFor('\r\n', 1000), 10);
@@ -297,7 +335,10 @@ function compare(a, b) {
 // ---------- Aktionen ----------
 async function run(label, fn) {
   busy = true; updateButtons();
+  job = { phase: label, t0: performance.now(), p0: performance.now(), v: 0, max: 1, lastLog: performance.now() };
+  lastRx = performance.now();
   progress(0, 1);
+  setStatus(label + ' läuft…');
   log(label + '…');
   const t0 = performance.now();
   try {
@@ -308,6 +349,8 @@ async function run(label, fn) {
     log('Letzte Serial-Ereignisse (< empfangen, > gesendet):\n' + trace.join('\n'));
     setStatus(label + ' fehlgeschlagen', 'err');
   }
+  if (job && job.v) log(`Stand bei Ende: ${jobLine()}`);
+  job = null;
   busy = false; updateButtons();
 }
 
@@ -326,7 +369,11 @@ $('btnRead').onclick = () => run('Lesen', async () => {
 
 $('btnWrite').onclick = () => run('Schreiben', async () => {
   const data = fitToEprom(fileData);
-  if (!confirm(`${data.length} Bytes auf ${eprom()[1]} schreiben?`)) return;
+  // Firmware überspringt FF-Bytes; Standard brennt je Byte mind. 50 ms
+  const burn = data.reduce((n, b) => n + (b !== 0xFF), 0);
+  const est = eprom()[3][+$('algo').value] === 1 ? `\nStandard-Algorithmus: ${burn} Bytes × 50 ms ≈ ${fmtT(burn * 0.05)} reine Brennzeit (h:mm:ss).` : '';
+  log(`${burn} von ${data.length} Bytes sind ≠ FF und werden gebrannt.${est}`);
+  if (!confirm(`${data.length} Bytes auf ${eprom()[1]} schreiben?${est}`)) return;
   // Übertragungsfehler: neu starten; die Firmware überspringt bereits korrekte Bytes.
   // Brennfehler ("Wrote 0x..") nicht wiederholen, das Byte ist dann wirklich falsch.
   for (let attempt = 1; ; attempt++) {
