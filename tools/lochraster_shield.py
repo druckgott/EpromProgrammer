@@ -1,6 +1,6 @@
 # Lochraster-Shield (README 4.8): Mega-Stiftleiste in der Mitte, Sockelleisten links/rechts, je Reihe eine gerade Loetbahn.
 # Koordinaten (Spalte, Reihe) = Aufdruck der Platine, Ansicht LOETSEITE. Prueft Netze (jedes Loch ein Netz, jedes Netz verbunden).
-# Aufruf: python -X utf8 tools/lochraster_shield.py images/lochraster_shield.svg  -> SVG, Markdown-Tabellen (stdout), C-Pinlisten fuer defines.h (stderr)
+# Aufruf: python -X utf8 tools/lochraster_shield.py images/lochraster_shield.svg images/lochraster_shield_bauteile.svg  -> SVGs (Loet-/Bauteilseite), Markdown-Tabellen (stdout), C-Pinlisten fuer defines.h (stderr)
 import sys
 
 ODD_COL, EVEN_COL = 19, 20            # Annahme: gerade Mega-Pins = innere Reihe (zur Mega-Mitte)
@@ -71,7 +71,7 @@ TR = {
  'C1':     [[(22,2), (22,3)]],
  'B2':     [[(22,4), (23,4), (24,4)]],
  '+12V75': [[(21,1), (22,1), (23,1), (23,2), (23,3), (24,3)]],
- 'VCC_EN': [[(19,9), (18,9), (18,8)]],
+ 'VCC_EN': [[(19,9), (18,9), (18,8)], [(13,8), (14,8)]],
  'B3':     [[(14,7), (15,7)]],
  'C3':     [[(15,6), (15,5)]],
  'B4':     [[(15,4), (16,4), (17,4)]],
@@ -82,7 +82,7 @@ for p, n in MEGA.items():
     step = 1 if hc > c else -1
     TR[LABEL[p]] = [[(x, r) for x in range(c, hc + step, step)]]
 # Isolierte Drahtbruecken (Bauteilseite)
-WIRES = [((19,2), (16,7), 'GND'), ((18,8), (14,8), 'VCC_EN')]
+WIRES = [((19,2), (16,7), 'GND'), ((18,8), (13,8), 'VCC_EN')]   # Draht nicht ins Loch eines Bauteilbeins
 
 # ---------- Pruefung: jedes Loch genau ein Netz, jedes Netz zusammenhaengend ----------
 hole = {}
@@ -116,58 +116,74 @@ for net, legs in NETLEGS.items():
 assert hdr(SPARE) not in hole, 'Ersatz-Pin belegt'
 print('OK: Netze geprueft', file=sys.stderr)
 
-# ---------- SVG ----------
-S, OX, OY = 28, 70, 150
-X = lambda c: OX + (c - 1) * S
-Y = lambda r: OY + (r - 1) * S
-NETCOL = {'GND':'#1d1d1b','5V':'#d68910','VCC':'#d68910','+6V25':'#d68910','VPP':'#c0392b','+12V75':'#c0392b',
-          'VPP_EN':'#2e6fb7','VCC_EN':'#2e6fb7'}
-o = []; w = o.append
-W, H = OX + 26 * S + 360, OY + 33 * S + 20
-w(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" font-family="Segoe UI, Helvetica, Arial, sans-serif">')
-w(f'<rect width="{W}" height="{H}" fill="#fff"/>')
-w('<text x="24" y="38" font-size="22" font-weight="bold" fill="#1d1d1b">Lochraster-Shield v2 – Ansicht LÖTSEITE</text>')
-w('<text x="24" y="62" font-size="14" fill="#6b6b66">Spalten/Reihen = Aufdruck der Platine. Mega-Stiftleiste in der Mitte, EPROM-Leisten links/rechts, je Reihe eine gerade Lötbahn.</text>')
-w('<text x="24" y="82" font-size="14" fill="#6b6b66">Gilt nur mit Firmware-Variante „shield“ (pio run -e shield). Von der Bauteilseite aus ist alles spiegelverkehrt.</text>')
-w(f'<text x="24" y="104" font-size="14" fill="#c0392b" font-weight="bold">Vor dem Löten prüfen: Spalte {EVEN_COL} muss über den GERADEN Mega-Pins (22 … 52) liegen, Spalte {ODD_COL} über den ungeraden.</text>')
-w(f'<rect x="{X(1)-16}" y="{Y(1)-26}" width="{26*S+4}" height="{32*S+16}" rx="6" fill="#f3e9dc" stroke="#b9a58c"/>')
-w(f'<rect x="{X(14)-12}" y="{Y(1)-12}" width="{11*S-4}" height="{25*S-4}" rx="4" fill="none" stroke="#2e6fb7" stroke-dasharray="6 4"/>')
-w(f'<text x="{X(14)-12}" y="{Y(27)+2}" font-size="11" fill="#2e6fb7">belegt: Spalte 14–24, Reihe 1–25 · Rest frei</text>')
-for c in range(1, 27):
-    if c in (1, 10, 20) or c % 5 == 0 or c in (14, 17, 19, 23, 24):
-        w(f'<text x="{X(c)}" y="{Y(1)-10}" font-size="10" text-anchor="middle" fill="#6b6b66">{c}</text>')
-for r in range(1, 33):
-    w(f'<text x="{X(1)-20}" y="{Y(r)+4}" font-size="10" text-anchor="end" fill="#6b6b66">{r}</text>')
-for c in range(1, 27):
-    for r in range(1, 33):
-        w(f'<circle cx="{X(c)}" cy="{Y(r)}" r="4" fill="#fff" stroke="#c9b79c"/>')
-def draw_traces():   # nach den Bauteilen zeichnen, damit nichts verdeckt wird
-    for net, paths in TR.items():
-        col = NETCOL.get(net, '#8e44ad' if net in LABEL.values() else '#555')
-        for path in paths:
-            pts = ' '.join(f'{X(c)},{Y(r)}' for c, r in path)
-            w(f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>')
-    for a, b, net in WIRES:
-        w(f'<path d="M{X(a[0])},{Y(a[1])} Q{(X(a[0])+X(b[0]))/2},{min(Y(a[1]),Y(b[1]))-40} {X(b[0])},{Y(b[1])}" fill="none" stroke="{NETCOL[net]}" stroke-width="3" stroke-dasharray="7 4"/>')
-# Bauteile
-for name, legs in PARTS.items():
-    pts = list(legs.values()); xs = [X(c) for c, _ in pts]; ys = [Y(r) for _, r in pts]
-    if name == 'J1':
-        w(f'<rect x="{min(xs)-12}" y="{min(ys)-12}" width="{max(xs)-min(xs)+24}" height="24" rx="3" fill="none" stroke="#1d1d1b" stroke-width="1.5"/>')
-    elif name[0] == 'Q':
-        w(f'<rect x="{min(xs)-12}" y="{min(ys)-12}" width="{max(xs)-min(xs)+24}" height="{max(ys)-min(ys)+24}" rx="11" fill="#eeeeec" fill-opacity="0.35" stroke="#1d1d1b" stroke-width="1.5" stroke-dasharray="4 2"/>')
-    elif name[0] == 'R':
-        w(f'<rect x="{min(xs)-9}" y="{min(ys)-9}" width="{max(xs)-min(xs)+18}" height="{max(ys)-min(ys)+18}" rx="8" fill="#e8d9b5" fill-opacity="0.35" stroke="#8a6d3b" stroke-width="1.5" stroke-dasharray="4 2"/>')
+# ---------- SVG: zwei Ansichten, Mega halbdurchsichtig dahinter ----------
+# Mega-Umriss in Platinen-Koordinaten, GESCHAETZT aus der Pinout-Grafik (lastminuteengineers), nicht nachgemessen:
+# Kante ca. 1 Raster neben der ungeraden Reihe, 1,2 Raster ueber 5V, 3 Raster unter GND hinaus;
+# Buchsenleiste D21..D14 auf Hoehe der 5V-Reihe ab ca. Spalte 22,7, A15..A8 ca. Reihe 27,2 ab Spalte 20,75.
+MEGA_EDGE = (18.0, 6.8, 28.0)          # Kante (Spalte), oben (Reihe), unten (Reihe)
+DIG = [(22.7 + k, 8.0, f'D{21-k}') for k in range(8)]
+ANA = [(20.75 + k, 27.25, f'A{15-k}') for k in range(8)]
+TO92 = {'Q1 BC337':'CBE', 'Q2 BC327':'CBE', 'Q3 S8050':'EBC', 'Q4 S8550':'EBC'}   # flache Seite zu dir, links->rechts
+S, OX, OY, NC = 28, 170, 170, 31        # NC: gezeichnete Spalten (Platine 1..26, dahinter Mega bis 31)
+
+def svg(path, solder):
+    X = (lambda c: OX + (c - 1) * S) if solder else (lambda c: OX + (NC - c) * S)
+    Y = lambda r: OY + (r - 1) * S
+    out = (lambda c: 1 if X(c) > X(20) else -1)        # Richtung "weg von der Mitte"
+    o = []; w = o.append
+    W, H = OX + (NC - 1) * S + 360, OY + 33 * S + 20
+    w(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" font-family="Segoe UI, Helvetica, Arial, sans-serif">')
+    w(f'<rect width="{W}" height="{H}" fill="#fff"/>')
+    if solder:
+        head = ['Lochraster-Shield – Ansicht LÖTSEITE (Unterseite, zeigt zum Mega)',
+                'Hier werden die Lötbahnen gezogen. Spalten/Reihen = Aufdruck. Spalte 1 links.',
+                'Gilt nur mit Firmware-Variante „shield“ (pio run -e shield).']
     else:
-        w(f'<line x1="{min(xs)}" y1="{min(ys)}" x2="{max(xs)}" y2="{max(ys)}" stroke="#7a6a55" stroke-width="2"/>')
-        cx, cy = (min(xs)+max(xs))/2, (min(ys)+max(ys))/2
-        bw = 44 if max(xs)-min(xs) > S else 14
-        bh = 14 if max(xs)-min(xs) > S else 14
-        w(f'<rect x="{cx-bw/2}" y="{cy-bh/2}" width="{bw}" height="{bh}" rx="3" fill="#3a3a3a" fill-opacity="0.35" stroke="#3a3a3a" stroke-dasharray="4 2"/>')
-def draw_strips():
-    w(f'<rect x="{X(ODD_COL)-11}" y="{Y(8)-11}" width="{2*S-6}" height="{18*S-6}" rx="3" fill="#2e6fb7" opacity="0.12" stroke="#2e6fb7" stroke-width="2"/>')
-    for col in (SL, SR):
-        w(f'<rect x="{X(col)-11}" y="{Y(9)-11}" width="22" height="{16*S-6}" rx="3" fill="#7d3c98" opacity="0.10" stroke="#7d3c98"/>')
+        head = ['Lochraster-Shield – Ansicht BAUTEILSEITE (von oben, wie es auf dem Mega steckt)',
+                'Hier werden die Bauteile gesteckt. Spalten/Reihen = Aufdruck. Spalte 1 rechts (gespiegelt zur Lötseite).',
+                'Transistoren: flache Seite wie gezeichnet, Beine E/B/C wie beschriftet. Diodenring = Kathode (K).']
+    w(f'<text x="24" y="38" font-size="22" font-weight="bold" fill="#1d1d1b">{head[0]}</text>')
+    for i, t in enumerate(head[1:]):
+        w(f'<text x="24" y="{62+i*20}" font-size="14" fill="#6b6b66">{t}</text>')
+    w(f'<text x="24" y="{102}" font-size="14" fill="#c0392b" font-weight="bold">Vor dem Löten prüfen: Spalte {EVEN_COL} über den GERADEN Mega-Pins (22 … 52), Spalte {ODD_COL} über den ungeraden.</text>')
+    w(f'<text x="24" y="{122}" font-size="13" fill="#0f6e8c">Blau, halbdurchsichtig: Arduino Mega darunter (Lage aus Pinout-Grafik geschätzt, ± 1 Raster).</text>')
+    rect = lambda c0, r0, c1, r1, extra: w(f'<rect x="{min(X(c0),X(c1))}" y="{Y(r0)}" width="{abs(X(c1)-X(c0))}" height="{Y(r1)-Y(r0)}" {extra}/>')
+    # Platine
+    rect(0.45, 0.1, 26.55, 32.55, 'rx="6" fill="#f3e9dc" stroke="#b9a58c"')
+    # Mega dahinter
+    e, top, bot = MEGA_EDGE
+    rect(e, top, NC + 0.5, bot, 'fill="#0f6e8c" fill-opacity="0.13" stroke="#0f6e8c" stroke-opacity="0.6" stroke-width="2" stroke-dasharray="8 5"')
+    w(f'<text x="{X(NC)}" y="{Y(top)-8}" font-size="12" text-anchor="middle" fill="#0f6e8c" font-weight="bold">Arduino Mega</text>')
+    w(f'<text x="{X(NC)}" y="{Y(bot)+16}" font-size="11" text-anchor="middle" fill="#0f6e8c">{"→" if solder else "←"} weiter zur USB-Buchse</text>')
+    rect(18.5, 7.45, 20.5, 25.55, 'rx="3" fill="#0f2a33" fill-opacity="0.18"')
+    for hdrs, name in ((DIG, 'Buchsenleiste D14–D21'), (ANA, 'Buchsenleiste A8–A15')):
+        r = hdrs[0][1]
+        rect(hdrs[0][0] - 0.5, r - 0.5, hdrs[-1][0] + 0.5, r + 0.5, 'rx="3" fill="#0f2a33" fill-opacity="0.18"')
+        for c, r, t in hdrs:
+            w(f'<rect x="{X(c)-5}" y="{Y(r)-5}" width="10" height="10" fill="#0f2a33" fill-opacity="0.35"/>')
+            w(f'<text x="{X(c)}" y="{Y(r)+(-9 if r < 15 else 17)}" font-size="9" text-anchor="middle" fill="#0f6e8c">{t}</text>')
+        w(f'<text x="{(X(hdrs[0][0])+X(hdrs[-1][0]))/2}" y="{Y(r)+(-24 if r < 15 else 34)}" font-size="11" text-anchor="middle" fill="#0f6e8c" font-weight="bold">{name} (Mega)</text>')
+    # Spalten- und Reihennummern
+    for c in range(1, 27):
+        if c in (1, 10, 20) or c % 5 == 0 or c in (14, 17, 19, 23, 24):
+            w(f'<text x="{X(c)}" y="{Y(1)-14}" font-size="10" text-anchor="middle" fill="#6b6b66">{c}</text>')
+    for r in range(1, 33):
+        w(f'<text x="{X(1) + (-20 if solder else 20)}" y="{Y(r)+4}" font-size="10" text-anchor="{"end" if solder else "start"}" fill="#6b6b66">{r}</text>')
+    for c in range(1, 27):
+        for r in range(1, 33):
+            w(f'<circle cx="{X(c)}" cy="{Y(r)}" r="4" fill="#fff" stroke="#c9b79c"/>')
+    # Loetbahnen (nur Loetseite)
+    if solder:
+        for net, paths in TR.items():
+            col = NETCOL.get(net, '#8e44ad' if net in LABEL.values() else '#555')
+            for p in paths:
+                pts = ' '.join(f'{X(c)},{Y(r)}' for c, r in p)
+                w(f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>')
+    # isolierte Drahtbruecken: auf der Bauteilseite durchgezogen, von unten gestrichelt
+    for a, b, net in WIRES:
+        dash = ' stroke-dasharray="7 4"' if solder else ''
+        w(f'<path d="M{X(a[0])},{Y(a[1])} Q{(X(a[0])+X(b[0]))/2},{min(Y(a[1]),Y(b[1]))-40} {X(b[0])},{Y(b[1])}" fill="none" stroke="{NETCOL[net]}" stroke-width="3"{dash}/>')
+    # Mega-Stiftleiste und Sockel
     for n in ['5V', 'GND'] + list(range(22, 54)):
         for c, r in (hdr(n) if isinstance(n, str) else [hdr(n)]):
             fill = {'5V':'#d68910','GND':'#1d1d1b'}.get(n, '#2e6fb7' if n in (VPP_EN, VCC_EN) else ('#bbb' if n == SPARE else '#555'))
@@ -178,44 +194,92 @@ def draw_strips():
         fill = {1:'#c0392b', 32:'#d68910', 16:'#1d1d1b'}.get(p, '#7d3c98')
         w(f'<circle cx="{X(c)}" cy="{Y(r)}" r="8.5" fill="{fill}"/>')
         w(f'<text x="{X(c)}" y="{Y(r)+3.5}" font-size="8.5" text-anchor="middle" fill="#fff" font-weight="bold">{p}</text>')
-        if p <= 16: w(f'<text x="{X(c)+13}" y="{Y(r)+4}" font-size="10" text-anchor="start">{LABEL[p]}</text>')
-        else:       w(f'<text x="{X(c)-13}" y="{Y(r)+4}" font-size="10" text-anchor="end">{LABEL[p]}</text>')
-    w(f'<text x="{X(SL)-14}" y="{Y(26)+16}" font-size="11" text-anchor="middle">Sockel</text>')
-    w(f'<text x="{(X(ODD_COL)+X(EVEN_COL))/2}" y="{Y(26)+16}" font-size="11" text-anchor="middle" fill="#2e6fb7" font-weight="bold">Mega 2×18</text>')
-    w(f'<text x="{X(SR)+14}" y="{Y(26)+16}" font-size="11" text-anchor="middle">Sockel</text>')
-draw_traces()
-draw_strips()
-for name, legs in PARTS.items():
-    for leg, (c, r) in legs.items():
-        w(f'<circle cx="{X(c)}" cy="{Y(r)}" r="4.5" fill="#1d1d1b"/>')
-        w(f'<text x="{X(c)}" y="{Y(r)-7}" font-size="8" text-anchor="middle" fill="#1d1d1b" font-weight="bold">{leg.split()[0] if name != "J1" else leg.replace(" V","")}</text>')
-# Bauteilnamen an der Seite (mit Hilfslinie)
+        d = out(c)
+        w(f'<text x="{X(c)+13*d}" y="{Y(r)+4}" font-size="10" text-anchor="{"start" if d > 0 else "end"}">{LABEL[p]}</text>')
+    if not solder:   # EPROM-Umriss mit Kerbe
+        x0, x1 = sorted((X(SL), X(SR)))
+        w(f'<rect x="{x0-14}" y="{Y(9)-16}" width="{x1-x0+28}" height="{Y(24)-Y(9)+32}" rx="4" fill="none" stroke="#7d3c98" stroke-width="1.5" stroke-dasharray="5 3"/>')
+        w(f'<path d="M{(x0+x1)/2-10},{Y(9)-16} a10,10 0 0 0 20,0" fill="none" stroke="#7d3c98" stroke-width="2"/>')
+        w(f'<text x="{x0-14}" y="{Y(26)+4}" font-size="11" fill="#7d3c98" font-weight="bold">EPROM-Umriss, Kerbe oben</text>')
+    # Bauteile
+    for name, legs in PARTS.items():
+        pts = [(X(c), Y(r)) for c, r in legs.values()]
+        xs = [p[0] for p in pts]; ys = [p[1] for p in pts]
+        if name == 'J1':
+            w(f'<rect x="{min(xs)-12}" y="{min(ys)-12}" width="{max(xs)-min(xs)+24}" height="24" rx="3" fill="none" stroke="#1d1d1b" stroke-width="1.5"/>')
+        elif name in TO92:
+            order = TO92[name]; p0, p2 = PARTS[name][order[0]], PARTS[name][order[2]]
+            dx, dy = X(p2[0]) - X(p0[0]), Y(p2[1]) - Y(p0[1]); L = (dx*dx + dy*dy) ** 0.5
+            sg = -1 if solder else 1                       # von unten gesehen ist die Haendigkeit gespiegelt
+            nx, ny = -dy / L * sg, dx / L * sg             # zeigt zur flachen Seite
+            mx, my = (X(p0[0]) + X(p2[0])) / 2, (Y(p0[1]) + Y(p2[1])) / 2
+            R, f = 1.25 * S, 0.45 * S
+            ax, ay = mx + nx*f - dx/L*R, my + ny*f - dy/L*R
+            bx, by = mx + nx*f + dx/L*R, my + ny*f + dy/L*R
+            w(f'<path d="M{ax:.1f},{ay:.1f} L{bx:.1f},{by:.1f} A{R},{R} 0 0 {0 if sg > 0 else 1} {ax:.1f},{ay:.1f} Z" fill="#555" fill-opacity="{0.1 if solder else 0.22}" stroke="#1d1d1b" stroke-width="{1.5 if solder else 2.5}"{" stroke-dasharray=\"4 2\"" if solder else ""}/>')
+        elif name[0] == 'R':          # stehend: Koerper auf Bein a, Draht zu b
+            (ac, ar), (bc, br) = legs['a'], legs['b']
+            w(f'<line x1="{X(ac)}" y1="{Y(ar)}" x2="{X(bc)}" y2="{Y(br)}" stroke="#8a6d3b" stroke-width="2"/>')
+            w(f'<circle cx="{X(ac)}" cy="{Y(ar)}" r="10" fill="#e8d9b5" fill-opacity="{0.35 if solder else 0.7}" stroke="#8a6d3b" stroke-width="1.5"{" stroke-dasharray=\"4 2\"" if solder else ""}/>')
+        else:                         # Diode: Koerper mit Ring auf der Kathodenseite
+            (kc, kr), (ac, ar) = legs['K'], legs['A']
+            x1, y1, x2, y2 = X(ac), Y(ar), X(kc), Y(kr)
+            w(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="#7a6a55" stroke-width="2"/>')
+            if abs(x2 - x1) > S:      # liegend
+                cx, cy = (x1 + x2) / 2, y1; s = 1 if x2 > x1 else -1
+                w(f'<rect x="{cx-22}" y="{cy-7}" width="44" height="14" rx="3" fill="#3a3a3a" fill-opacity="{0.25 if solder else 0.55}" stroke="#3a3a3a"/>')
+                w(f'<rect x="{cx+s*22-(8 if s > 0 else 0)}" y="{cy-7}" width="8" height="14" fill="#ccc" stroke="#3a3a3a"/>')
+            else:                     # stehend: Koerper auf der Kathode, Ring unten
+                w(f'<circle cx="{x2}" cy="{y2}" r="10" fill="#3a3a3a" fill-opacity="{0.25 if solder else 0.55}" stroke="#3a3a3a"/>')
+                w(f'<circle cx="{x2}" cy="{y2}" r="6" fill="none" stroke="#ccc" stroke-width="3"/>')
+    for name, legs in PARTS.items():
+        for leg, (c, r) in legs.items():
+            w(f'<circle cx="{X(c)}" cy="{Y(r)}" r="4.5" fill="#1d1d1b"/>')
+            w(f'<text x="{X(c)}" y="{Y(r)-7}" font-size="9" text-anchor="middle" fill="#1d1d1b" font-weight="bold">{leg.split()[0] if name != "J1" else leg.replace(" V","")}</text>')
+    for a, b, net in WIRES:
+        for c, r in (a, b):
+            w(f'<circle cx="{X(c)}" cy="{Y(r)}" r="5" fill="#fff" stroke="{NETCOL[net]}" stroke-width="2.5"/>')
+    # Bauteilnamen (mit Hilfslinie)
+    for name, (c, r) in NAMEPOS.items():
+        legs = list(PARTS[name].values()); tx, ty = legs[len(legs)//2]
+        d = 1 if X(c) > X(tx) else -1
+        w(f'<line x1="{X(c)}" y1="{Y(r)}" x2="{X(tx)}" y2="{Y(ty)}" stroke="#999" stroke-width="1"/>')
+        w(f'<rect x="{X(c)-(0 if d > 0 else 82)}" y="{Y(r)-9}" width="82" height="17" rx="3" fill="#fff" stroke="#999"/>')
+        w(f'<text x="{X(c)+4*d}" y="{Y(r)+4}" font-size="11" text-anchor="{"start" if d > 0 else "end"}" font-weight="bold">{name}</text>')
+    # Legende
+    LX, LY = OX + (NC - 1) * S + 40, Y(10)
+    w(f'<text x="{LX}" y="{LY-18}" font-size="14" font-weight="bold">Legende</text>')
+    i = 0
+    if solder:
+        for colr, t in [('#8e44ad','Signal-Bahn (je Reihe gerade)'),('#1d1d1b','GND'),('#d68910','5 V / 6,25 V / VCC'),
+                        ('#c0392b','12,75 V / VPP'),('#2e6fb7','Steuerleitung 22 / 23'),('#555','Bahn innerhalb der Stufen')]:
+            w(f'<line x1="{LX}" y1="{LY+i*22}" x2="{LX+28}" y2="{LY+i*22}" stroke="{colr}" stroke-width="6" opacity="0.6" stroke-linecap="round"/>')
+            w(f'<text x="{LX+38}" y="{LY+i*22+4}" font-size="12">{t}</text>'); i += 1
+    w(f'<path d="M{LX},{LY+i*22} h28" stroke="#1d1d1b" stroke-width="2.5"{" stroke-dasharray=\"7 4\"" if solder else ""}/>')
+    w(f'<text x="{LX+38}" y="{LY+i*22+4}" font-size="12">isolierter Draht (Bauteilseite)</text>'); i += 1
+    w(f'<path d="M{LX},{LY+i*22+6} h28 a14,14 0 0 0 -28,0 Z" fill="#555" fill-opacity="0.22" stroke="#1d1d1b" stroke-width="2"/>')
+    w(f'<text x="{LX+38}" y="{LY+i*22+4}" font-size="12">TO-92 von {"unten" if solder else "oben"}: Kante = flache Seite</text>'); i += 1
+    if solder:
+        notes = ['Lötbahnen:', '• 2 Löcher: Lötbrücke genügt.', '• ab 3 Löchern: blanken Draht', '  (Silberdraht) auflegen und an', '  jedem Loch verlöten.',
+                 '• Benachbarte Reihen dürfen sich', '  nicht berühren – nachmessen.', '',
+                 'Über der Mega-Buchsenleiste', 'D14–D21 (Reihe 7–9, ab Sp. 21)', 'liegt das Shield auf: Lötstellen', 'flach, Isolierband drunter –', 'dort läuft VPP (12,75 V)!']
+    else:
+        notes = ['Einbau:', '• Mega-Stiftleiste: Kunststoff oben,', '  lange Stifte nach unten.', '• Kerbe des EPROMs zu Reihe 1.',
+                 '• Widerstände stehend (Körper', '  auf dem Kreis, Draht zurück).', '• D2 liegend, D1 stehend:', '  Körper auf K, Ring unten.',
+                 '• Transistoren: flache Seite wie', '  gezeichnet. Beschriftung E/B/C', '  am Loch ist maßgeblich.', '• Pin 52 frei (grau).',
+                 '• Spalte 1 hängt am Anschluss-', '  feld, nicht benutzen.',
+                 '• Das EPROM sitzt über der Mega-', '  Stiftleiste: Buchsenleisten', '  (ca. 8,5 mm) sind hoch genug.', '  ZIF-Sockel nur auf Buchsen-', '  leisten als Abstandhalter.']
+    for k, t in enumerate(notes):
+        w(f'<text x="{LX}" y="{LY+i*22+30+k*19}" font-size="12" font-weight="{"bold" if k == 0 or t.endswith(":") else "normal"}">{t}</text>')
+    w('</svg>')
+    open(path, 'w', encoding='utf-8').write('\n'.join(o))
+
+NETCOL = {'GND':'#1d1d1b','5V':'#d68910','VCC':'#d68910','+6V25':'#d68910','VPP':'#c0392b','+12V75':'#c0392b',
+          'VPP_EN':'#2e6fb7','VCC_EN':'#2e6fb7'}
 NAMEPOS = {'J1':(10,1),'Q1 BC337':(26,2),'R1 1k':(10,3),'R2 1k':(26,3),'Q2 BC327':(26,4),'R3 10k':(26,5),
            'D2 1N5819':(26,6),'D1 1N5819':(10,6),'Q4 S8550':(10,4),'R6 10k':(10,2),'R5 1k':(10,5),'Q3 S8050':(10,7),'R4 1k':(10,8)}
-for name, (c, r) in NAMEPOS.items():
-    legs = list(PARTS[name].values()); tx, ty = legs[len(legs)//2]
-    anchor = 'start' if c > 20 else 'end'
-    w(f'<line x1="{X(c)}" y1="{Y(r)}" x2="{X(tx)}" y2="{Y(ty)}" stroke="#999" stroke-width="1"/>')
-    w(f'<rect x="{X(c)-(0 if anchor=="start" else 78)}" y="{Y(r)-9}" width="78" height="17" rx="3" fill="#fff" stroke="#999"/>')
-    w(f'<text x="{X(c)+(4 if anchor=="start" else -4)}" y="{Y(r)+4}" font-size="11" text-anchor="{anchor}" font-weight="bold">{name}</text>')
-# Legende
-LX, LY = X(26) + 100, Y(9)
-leg = [('#8e44ad','Signal-Bahn (je Reihe gerade)'),('#1d1d1b','GND'),('#d68910','5 V / 6,25 V / VCC'),
-       ('#c0392b','12,75 V / VPP'),('#2e6fb7','Steuerleitung 22 / 23'),('#555','Bahn innerhalb der Stufen')]
-w(f'<text x="{LX}" y="{LY-18}" font-size="14" font-weight="bold">Legende</text>')
-for i, (colr, t) in enumerate(leg):
-    w(f'<line x1="{LX}" y1="{LY+i*22}" x2="{LX+28}" y2="{LY+i*22}" stroke="{colr}" stroke-width="6" opacity="0.6" stroke-linecap="round"/>')
-    w(f'<text x="{LX+38}" y="{LY+i*22+4}" font-size="12">{t}</text>')
-w(f'<path d="M{LX},{LY+6*22} h28" stroke="#1d1d1b" stroke-width="2.5" stroke-dasharray="7 4"/>')
-w(f'<text x="{LX+38}" y="{LY+6*22+4}" font-size="12">isolierter Draht (Bauteilseite)</text>')
-notes = ['Hinweise:', '• Kerbe des EPROMs zeigt zu Reihe 1.', '• Pin 52 frei (grau).', '• Widerstände stehend, Dioden:',
-         '  D2 liegend, D1 stehend.', '• Transistor-Beine nach Loch-Liste,', '  nicht nach Bild-Ausrichtung.',
-         '• Spalte 1 hängt am Anschlussfeld,', '  nicht benutzen.', '• Unterseite gegen den Mega mit', '  Isolierband abdecken.']
-for i, t in enumerate(notes):
-    w(f'<text x="{LX}" y="{LY+190+i*19}" font-size="12" font-weight="{"bold" if i==0 else "normal"}">{t}</text>')
-w('</svg>')
-open(sys.argv[1], 'w', encoding='utf-8').write('\n'.join(o))
-
+svg(sys.argv[1], True)
+svg(sys.argv[2], False)
 # ---------- Markdown ----------
 fm = lambda h: f'{h[0]}/{h[1]}'
 print('| Reihe | Sockel links (Sp. 17) | Mega links (Sp. 19) | Mega rechts (Sp. 20) | Sockel rechts (Sp. 23) |')

@@ -56,7 +56,9 @@
     <button id="btnOpen">Datei öffnen</button>
     <button id="btnSave" disabled>Speichern</button>
     <input id="file" type="file" hidden>
+    <label title="Datei kleiner als das EPROM: mehrfach hintereinander schreiben statt Rest mit FF füllen"><input id="mirror" type="checkbox" checked> kleinere Datei wiederholen</label>
     <span id="info"></span>
+    <div id="plan" style="flex-basis:100%;color:var(--err);font-weight:bold"></div>
   </div>
 
   <div class="card"><div class="progrow"><progress id="prog" value="0" max="1"></progress><span id="pct"></span></div><div id="act"></div><pre id="log"></pre></div>
@@ -116,7 +118,8 @@ function onAlgoChange() {
   $('vpp').value = e[4][i];
   $('vcc').value = e[5][i];
 }
-$('type').onchange = onTypeChange;
+$('type').onchange = () => { onTypeChange(); showPlan(); };
+$('mirror').onchange = showPlan;
 $('algo').onchange = onAlgoChange;
 onTypeChange();
 
@@ -318,12 +321,26 @@ async function writeEprom(data) {
   await waitFor('@RSPWRIT\r\n', 5000);
 }
 
-function fitToEprom(data) {
+// Kleinere Datei: n-fach wiederholen (wenn die EPROM-Größe ein Vielfaches ist und Haken gesetzt), sonst Rest FF
+function fitPlan(len) {
   const size = eprom()[2];
+  if (len >= size) return { size, n: 1, msg: len > size ? `Datei (${len} Bytes) größer als ${eprom()[1]} (${size}) – wird abgeschnitten.` : '' };
+  const n = $('mirror').checked && size % len === 0 ? size / len : 1;
+  return { size, n, msg: n > 1 ? `Datei (${len} Bytes) kleiner als ${eprom()[1]} (${size}) – wird ${n}× hintereinander geschrieben.`
+                               : `Datei (${len} Bytes) kleiner als ${eprom()[1]} (${size}) – Rest wird mit FF gefüllt.` };
+}
+function fitToEprom(data) {
+  const { size, n, msg } = fitPlan(data.length);
   const out = new Uint8Array(size).fill(0xFF);
-  out.set(data.subarray(0, size));
-  if (data.length !== size) log(`Hinweis: Datei hat ${data.length} Bytes, EPROM ${size}. ${data.length < size ? 'Rest mit FF aufgefüllt.' : 'Abgeschnitten.'}`);
+  for (let i = 0; i < n; i++) out.set(data.subarray(0, size), i * data.length);
+  if (msg) log('Hinweis: ' + msg);
   return out;
+}
+function showPlan() {
+  if (!fileData) return;
+  const { msg } = fitPlan(fileData.length);
+  $('plan').textContent = msg;
+  if (msg) log('Hinweis: ' + msg);
 }
 
 function compare(a, b) {
@@ -373,7 +390,8 @@ $('btnWrite').onclick = () => run('Schreiben', async () => {
   const burn = data.reduce((n, b) => n + (b !== 0xFF), 0);
   const est = eprom()[3][+$('algo').value] === 1 ? `\nStandard-Algorithmus: ${burn} Bytes × 50 ms ≈ ${fmtT(burn * 0.05)} reine Brennzeit (h:mm:ss).` : '';
   log(`${burn} von ${data.length} Bytes sind ≠ FF und werden gebrannt.${est}`);
-  if (!confirm(`${data.length} Bytes auf ${eprom()[1]} schreiben?${est}`)) return;
+  const plan = fitPlan(fileData.length).msg;
+  if (!confirm(`${data.length} Bytes auf ${eprom()[1]} schreiben?${plan ? '\n' + plan : ''}${est}`)) return;
   // Übertragungsfehler: neu starten; die Firmware überspringt bereits korrekte Bytes.
   // Brennfehler ("Wrote 0x..") nicht wiederholen, das Byte ist dann wirklich falsch.
   for (let attempt = 1; ; attempt++) {
@@ -410,6 +428,7 @@ $('file').onchange = async () => {
   $('info').textContent = `${f.name} (${fileData.length} Bytes)`;
   log(`Datei ${f.name} geladen.`);
   hexDump(fileData);
+  showPlan();
   updateButtons();
 };
 

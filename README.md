@@ -4,6 +4,39 @@ UV-EPROMs (getestet mit **ST M27C4001**) auslesen und beschreiben mit einem **Ar
 
 Anwendungsbeispiel: das CPU-Game-ROM eines Flippers **The Simpsons Pinball Party (Stern, 2003, Whitestar-System)** auf einen M27C4001 brennen – siehe [Beispiel: Simpsons Pinball Party](#9-beispiel-simpsons-pinball-party-stern).
 
+## Inhalt
+
+**Für beide Aufbauten**
+
+1. [Sicherheit zuerst](#1-sicherheit-zuerst)
+2. [Teileliste](#2-teileliste)
+3. [Gesamtschaltplan](#3-gesamtschaltplan)
+
+**Aufbau A – direkt verkabelt (Steckbrett + Steckbrücken)**
+
+- [4. Welche Variante?](#4-verdrahtung-schritt-für-schritt)
+- [4.1 Masse und Versorgung](#41-masse-und-versorgung) · [4.2 Daten-Pins](#42-daten-pins-porta) · [4.3 Adress-Pins](#43-adress-pins) · [4.4 Steuer-Pins](#44-steuer-pins)
+- [4.5 VPP-Schaltstufe](#45-vpp-schaltstufe-1275-v) · [4.6 VCC-Umschaltung](#46-vcc-umschaltung-5-v--625-v) · [4.7 Ersatz-Transistoren](#47-ersatz-transistoren)
+- [5. Spannungen prüfen](#5-vor-dem-ersten-einsetzen-spannungen-prüfen)
+- [6. Firmware flashen](#6-firmware-flashen) – Umgebung `megaatmega2560` (Standard)
+
+**Aufbau B – Lochraster-Platine (Shield zum Aufstecken)**
+
+- [4.8 Shield: Belegung Reihe für Reihe](#48-variante-b-lochraster-shield-zum-aufstecken)
+- [Bauteilseite: Einbaurichtung (E/B/C, Diodenring)](#bauteilseite-einbaurichtung)
+- [Lötseite: Bahnen und Drahtbrücken](#lötseite-bahnen-und-drahtbrücken)
+- [Zusammenbau, nur auf einer Seite gelötet](#zusammenbau-nur-auf-einer-seite-gelötet)
+- [5. Spannungen prüfen – Shield](#spannungen-prüfen-shield)
+- [6. Firmware flashen](#6-firmware-flashen) – Umgebung `shield`
+
+**Bedienung (für beide)**
+
+7. [Web-App starten](#7-web-app-starten)
+8. [Bedienung: Lesen, Schreiben, Verify](#8-bedienung-lesen-schreiben-verify)
+9. [Beispiel: Simpsons Pinball Party (Stern)](#9-beispiel-simpsons-pinball-party-stern)
+10. [Unterstützte EPROM-Typen und Grenzen](#10-unterstützte-eprom-typen-und-grenzen)
+11. [Projektstruktur, Herkunft, Lizenz](#11-projektstruktur-herkunft-lizenz)
+
 ![Aufbau mit Labornetzteil](images/mega_aufbau.jpg)
 
 ## Stand
@@ -14,26 +47,11 @@ Anwendungsbeispiel: das CPU-Game-ROM eines Flippers **The Simpsons Pinball Party
 | Lesen 27C4001 (512 KiB) inkl. Live-Hex-Dump, Leer-Prüfung | ✅ funktioniert |
 | Speichern als `.bin` | ✅ eingebaut |
 | Schreiben (Fast) mit Live-Fortschritt | ✅ läuft am Gerät, gemessen ca. 636 B/s (27C4001 ≈ 14 min) |
-| Automatisches Verify nach dem Schreiben | ⚠️ eingebaut, kompletter Durchlauf am Gerät noch ausstehend |
-| VCC-Umschaltung 5 V ↔ 6,25 V (Pin 53, Shield: Pin 23) | ⚠️ in Betrieb (Fast), Umschaltzeit **noch nicht mit dem Oszi nachgemessen** |
-| Spannungsmessung Vcc/Vpp | ❌ nicht vorhanden – die Firmware meldet einfach die angeforderten Werte zurück |
+| Automatisches Verify nach dem Schreiben | ✅ funktioniert |
+| VCC-Umschaltung 5 V ↔ 6,25 V (Pin 53, Shield: Pin 23) | ✅ funktioniert mit Standard und Fast |
+| Spannungsmessung Vcc/Vpp | ➖ bewusst nicht vorhanden – die Firmware meldet die angeforderten Werte zurück |
+| Kleinere Datei automatisch mehrfach schreiben (z. B. 128 KiB auf 27C4001) | ✅ eingebaut, Meldung beim Laden ([8](#8-bedienung-lesen-schreiben-verify)) – Logik geprüft, am Gerät noch nicht damit gebrannt |
 | Lochraster-Shield ([4.8](#48-variante-b-lochraster-shield-zum-aufstecken)) + Firmware-Variante `shield` | ⚠️ entworfen und kompiliert, **noch nicht gebaut und nicht am Gerät getestet** |
-
-## Inhalt
-
-1. [Sicherheit zuerst](#1-sicherheit-zuerst)
-2. [Teileliste](#2-teileliste)
-3. [Gesamtschaltplan](#3-gesamtschaltplan)
-4. [Verdrahtung Schritt für Schritt](#4-verdrahtung-schritt-für-schritt) – Variante A Steckbrett, [Variante B Shield](#48-variante-b-lochraster-shield-zum-aufstecken)
-5. [Vor dem ersten Einsetzen: Spannungen prüfen](#5-vor-dem-ersten-einsetzen-spannungen-prüfen)
-6. [Firmware flashen](#6-firmware-flashen)
-7. [Web-App starten](#7-web-app-starten)
-8. [Bedienung: Lesen, Schreiben, Verify](#8-bedienung-lesen-schreiben-verify)
-9. [Beispiel: Simpsons Pinball Party (Stern)](#9-beispiel-simpsons-pinball-party-stern)
-10. [Unterstützte EPROM-Typen und Grenzen](#10-unterstützte-eprom-typen-und-grenzen)
-11. [Projektstruktur, Herkunft, Lizenz](#11-projektstruktur-herkunft-lizenz)
-
----
 
 ## 1. Sicherheit zuerst
 
@@ -209,11 +227,11 @@ C1815/A1015 können nur 150 mA – für diese Schaltung (wenige mA) reicht das.
 
 Alles auf einer Lochrasterplatine (Einzel-Lötpunkte), die direkt auf die **doppelte Stiftleiste 22–53** des Mega gesteckt wird. Auf dieser Leiste liegen auch 5 V und GND – andere Mega-Pins werden nicht gebraucht. Die Mega-Stiftleiste sitzt **in der Mitte**, links und rechts davon je eine Buchsenleiste 1×16 als EPROM-Sockel (6 Löcher = 15,24 mm Abstand). Jeder EPROM-Pin liegt in **derselben Reihe** wie sein Mega-Pin, die Verbindung ist eine gerade Lötbahn von 2–3 Löchern. Dafür ist die Pinbelegung eine andere als bei Variante A → **Firmware-Variante `shield`** nötig.
 
-![Lochraster-Shield, Ansicht Lötseite](images/lochraster_shield.svg)
+**Koordinaten** = Spalten-/Reihennummern, wie sie auf der Platine aufgedruckt sind. Es gibt zwei Zeichnungen derselben Platine: **Bauteilseite** (von oben, zum Bestücken) und **Lötseite** (von unten, zum Ziehen der Bahnen). Sie sind zueinander gespiegelt – Spalte 1 ist auf der Bauteilseite rechts, auf der Lötseite links. Belegt werden nur Spalte 13–24 und Reihe 1–25; der Rest kann abgesägt werden. Spalte 1 hängt am Anschlussfeld der Platine – nicht benutzen.
 
-**Koordinaten** = Spalten-/Reihennummern, wie sie auf der Platine aufgedruckt sind (Spalten 1 … 26 oben, Reihen 1 … 31 am Anschlussfeld links), **Ansicht auf die Lötseite**. Von der Bauteilseite ist alles spiegelverkehrt. Belegt werden nur Spalte 14–24 und Reihe 1–25; der Rest kann abgesägt werden. Spalte 1 hängt am Anschlussfeld der Platine – nicht benutzen.
+In beiden Zeichnungen liegt der **Arduino Mega halbdurchsichtig dahinter** (blau): Platinenkante, Doppelleiste und die beiden Buchsenleisten D14–D21 und A8–A15, die unter dem Shield liegen. Die Lage stammt aus einer Pinout-Grafik des Mega (geschätzt, ± 1 Raster), **nicht nachgemessen**.
 
-> ⚠️ **Vor dem Verlöten prüfen (Annahme, nicht nachgemessen):** Die Belegung geht davon aus, dass am Mega die **geraden Pins (22, 24 … 52) in der inneren Reihe** der Doppelleiste liegen (zur Platinenmitte) und 5 V oben, GND unten. Stiftleiste einstecken, Platine aufsetzen und am Aufdruck des Mega nachsehen: **Spalte 20 muss über den geraden, Spalte 19 über den ungeraden Pins liegen.** Wenn nicht: nicht löten, Plan wird gespiegelt.
+> ⚠️ **Vor dem Verlöten prüfen:** Laut Mega-Pinout liegen die **geraden Pins (22, 24 … 52) in der inneren Reihe** der Doppelleiste (zur Platinenmitte), 5 V am einen, GND am anderen Ende – so ist der Plan gezeichnet. Trotzdem: Stiftleiste einstecken, Platine aufsetzen und am Aufdruck des Mega nachsehen: **Spalte 20 muss über den geraden, Spalte 19 über den ungeraden Pins liegen.** Wenn nicht: nicht löten, Plan wird gespiegelt.
 
 **Mega-Leiste und EPROM, Reihe für Reihe** (je Reihe: Sockel links ↔ Mega links, Mega rechts ↔ Sockel rechts):
 
@@ -238,25 +256,44 @@ Alles auf einer Lochrasterplatine (Einzel-Lötpunkte), die direkt auf die **dopp
 | 24 | Pin 17 Q3 | `53` | `52` frei | Pin 16 VSS |
 | 25 | – | GND | GND | – |
 
-In Reihe 10–23 wird jeder Sockel-Pin mit dem Mega-Pin daneben verbunden (links Sp. 17→19, rechts Sp. 23→20), in Reihe 24 nur links. **Reihe 9 bleibt in der Mitte offen** – VPP, VCC, 22 und 23 gehen zu den Schaltstufen. Pin 16 (VSS) geht nach unten zu GND.
+#### Bauteilseite: Einbaurichtung
 
-**Bauteile** (Widerstände stehend, D2 liegend über Reihe 6, D1 stehend). Transistoren nach dieser Liste stecken, nicht nach der Lage im Bild – das Pinout steht in [Kap. 2](#2-teileliste):
+![Lochraster-Shield, Ansicht Bauteilseite](images/lochraster_shield_bauteile.svg)
+
+So wird bestückt (Blick von oben, so wie das Shield später auf dem Mega steckt):
+
+- **Transistoren (TO-92):** Der Halbkreis ist der Körper von oben, die **gerade Kante ist die flache, beschriftete Seite**. Transistor so einstecken, dass seine flache Seite zur geraden Kante zeigt, dann sitzen E/B/C richtig. Maßgeblich sind die Buchstaben am Loch. Gezeichnet nach dem Pinout aus [Kap. 2](#2-teileliste) (BC337/BC327: C–B–E, S8050/S8550: E–B–C, flache Seite zu dir). Es gibt S8050/S8550 mit abweichender Belegung – im Zweifel mit dem Diodentest des Multimeters nachmessen (die Basis ist das Bein, das zu beiden anderen leitet).
+- **Dioden:** Der Ring ist die Kathode **K**. D2 liegt über Reihe 6, Ring links bei 23/6. D1 steht: Körper auf dem Loch 19/7 (K), Ring unten, das obere Drahtende zurück nach 20/7 (A).
+- **Widerstände** stehend: Körper auf dem gezeichneten Kreis, Draht zurück ins Nachbarloch. Richtung egal.
+- **EPROM:** Kerbe zu Reihe 1 (zu J1). Das EPROM sitzt über der Mega-Stiftleiste. Buchsenleisten mit ca. 8,5 mm Höhe reichen darüber; ein ZIF-Sockel braucht Buchsenleisten als Abstandhalter darunter (Kunststoff + Stiftenden der Mega-Leiste stehen ca. 5–6 mm hoch, nicht nachgemessen).
 
 | Bauteil | Bein → Loch (Sp./R.) |
 | :--- | :--- |
 | J1 (Netzteil, 3-pol.) | +6,25 V 19/1, GND 20/1, +12,75 V 21/1 |
 | Q1 BC337 | E 20/2, B 21/2, C 22/2 |
-| R1 1k | 21/3, 21/4 |
-| R2 1k | 22/3, 22/4 |
+| R1 1k | b 21/3, a 21/4 |
+| R2 1k | a 22/3, b 22/4 |
 | Q2 BC327 | E 23/3, B 23/4, C 23/5 |
-| R3 10k | 24/3, 24/4 |
+| R3 10k | a 24/3, b 24/4 |
 | D2 1N5819 | A 17/6, K (Ring) 23/6 |
 | D1 1N5819 | K (Ring) 19/7, A 20/7 |
 | Q4 S8550 | E 17/3, B 17/4, C 17/5 |
-| R6 10k | 16/3, 16/4 |
-| R5 1k | 15/4, 15/5 |
+| R6 10k | a 16/3, b 16/4 |
+| R5 1k | a 15/4, b 15/5 |
 | Q3 S8050 | C 15/6, B 15/7, E 15/8 |
-| R4 1k | 14/7, 14/8 |
+| R4 1k | a 14/7, b 14/8 |
+
+#### Lötseite: Bahnen und Drahtbrücken
+
+![Lochraster-Shield, Ansicht Lötseite](images/lochraster_shield.svg)
+
+In Reihe 10–23 wird jeder Sockel-Pin mit dem Mega-Pin daneben verbunden (links Sp. 17→19, rechts Sp. 23→20), in Reihe 24 nur links. **Reihe 9 bleibt in der Mitte offen** – VPP, VCC, 22 und 23 gehen zu den Schaltstufen. Pin 16 (VSS) geht nach unten zu GND.
+
+**Alles wird auf der Lötseite verbunden**, alle Bauteile stecken von oben – oben muss nichts gelötet werden. Auf der Lötseite kreuzt sich keine Bahn (das Skript prüft, dass jedes Loch nur zu einem Netz gehört). Dafür braucht es:
+
+- **Lötbrücke** (Zinn zwischen zwei Nachbarpunkten) bei Bahnen über **2 Löcher**.
+- **Blanker Draht** (Silberdraht oder abgeschnittenes Bauteilbein) bei Bahnen ab **3 Löchern**: auf die Punkte legen und an jedem Loch verlöten. Das betrifft alle Signal-Bahnen (links 3, rechts 4 Löcher) sowie GND, VCC, VPP, VPP_EN, +12,75 V und +6,25 V.
+- **Zwei isolierte Drahtbrücken** auf der Bauteilseite, wo sich Bahnen sonst kreuzen würden: **GND** 19/2 → 16/7 und **VCC_EN** 18/8 → 13/8. Draht von oben durchstecken, unten verlöten. 13/8 ist ein freies Loch neben R4 (Lötbrücke 13/8 → 14/8), damit kein Loch zwei Drähte aufnehmen muss.
 
 **Lötbahnen der Stromversorgung und Schaltstufen** (Loch für Loch geradeaus bzw. um die Ecke, wie im Bild):
 
@@ -272,19 +309,25 @@ In Reihe 10–23 wird jeder Sockel-Pin mit dem Mega-Pin daneben verbunden (links
 | Q1 Kollektor | 22/2 → 22/3 |
 | Q2 Basis | 22/4 → 23/4 → 24/4 |
 | +12,75 V | 21/1 → 23/1 → 23/3 → 24/3 |
-| VCC_EN (Mega 23) | 19/9 → 18/9 → 18/8 |
+| VCC_EN (Mega 23) | 19/9 → 18/9 → 18/8, dazu 13/8 → 14/8 (R4) |
 | Q3 Basis | 14/7 → 15/7 |
 | Q3 Kollektor | 15/6 → 15/5 |
 | Q4 Basis | 15/4 → 16/4 → 17/4 |
 | +6,25 V | 19/1 → 17/1 → 17/3 → 16/3 |
 
-**Zwei isolierte Drahtbrücken** auf der Bauteilseite: **GND** 19/2 → 16/7 und **VCC_EN** 18/8 → 14/8.
+#### Zusammenbau, nur auf einer Seite gelötet
 
-**Montage:**
-- Mega-Stiftleiste von der Bauteilseite einstecken, Kunststoff oben, lange Stifte nach unten zum Mega, auf der Lötseite verlöten. Erst danach die Bahnen ziehen.
-- Die Platine ragt in Richtung Spalte 1 über das Ende des Mega hinaus, der Bereich ab Spalte 21 liegt über dem Mega. Unterseite dort mit Isolierband abdecken.
-- Kerbe des EPROMs zeigt zu Reihe 1 (zu J1).
-- Die Belegung erzeugt `images/lochraster_shield.svg`. Das Skript prüft beim Erzeugen, dass jedes Loch genau ein Netz hat und jedes Netz verbunden ist – am fertigen Board trotzdem mit dem Durchgangsprüfer gegenmessen (benachbarte Reihen dürfen keinen Durchgang haben).
+Reihenfolge so, dass jedes Teil von oben gesteckt und unten gelötet wird:
+
+1. **Mega-Stiftleiste 2×18** von der Bauteilseite einstecken: Kunststoff **oben**, lange Stifte nach unten durch die Platine, unten verlöten. Tipp: Die Stifte vorher mit einer flachen Zange etwas durch den Kunststoff nach oben schieben, dann bleibt unten mehr Länge für die Mega-Buchse. Lötstellen klein halten, sie sitzen direkt auf der Mega-Buchse. Aufstecken und prüfen (Spalte 20 über den geraden Pins), erst dann weiter.
+2. **Buchsenleisten 1×16** (EPROM) in Spalte 17 und 23, unten verlöten.
+3. **Widerstände, Dioden, Transistoren, J1** nach der Bauteilseiten-Zeichnung stecken und verlöten. Beinchen erst nach dem Löten kürzen – die abgeschnittenen Enden eignen sich als blanker Draht für die Bahnen.
+4. **Lötbahnen** auf der Lötseite ziehen (Bild Lötseite), dann die **zwei isolierten Drahtbrücken** oben.
+5. **Durchgangsprüfer:** jede Bahn einmal; benachbarte Reihen der Leisten dürfen untereinander keinen Durchgang haben.
+6. **Unterseite isolieren:** Das Shield liegt auf den Mega-Buchsenleisten **D14–D21** (unter Reihe 7–9, ab ca. Spalte 21) und **A8–A15** (unter ca. Reihe 27) auf. Über D14–D21 laufen VPP (12,75 V) und VPP_EN. Die Unterseite dort mit Isolierband abdecken, sonst kann eine Lötstelle einen Mega-Pin berühren. Die Platine ragt in Richtung Spalte 1 über das Ende des Mega hinaus; ab ca. Spalte 18 liegt sie über dem Mega.
+7. Spannungen prüfen wie in [Spannungen prüfen: Shield](#spannungen-prüfen-shield), erst dann aufstecken und Firmware `shield` flashen.
+
+Beide Bilder erzeugt `tools/lochraster_shield.py`. Das Skript prüft beim Erzeugen, dass jedes Loch genau ein Netz hat und jedes Netz verbunden ist – am fertigen Board trotzdem mit dem Durchgangsprüfer gegenmessen.
 
 ---
 
@@ -297,7 +340,9 @@ Empfehlung, **ohne EPROM im Sockel**, mit dem Multimeter gegen GND:
 3. VCC-Stufe testen: den 1-kΩ-Widerstand vor dem S8050 kurz von Pin 53 an den **5-V-Pin** des Mega stecken → Pin 32 ≈ 6,0–6,25 V (nie über 6,5 V). Dabei muss der **5-V-Pin des Mega bei 5 V bleiben** – steigt er, ist D1 falsch herum oder fehlt. Danach zurück an Pin 53.
 4. VPP-Stufe genauso mit dem Widerstand vor dem BC337 → Pin 1 ≈ 12,75 V (abzüglich Sättigungsspannung des BC327). Danach zurück an Pin 52.
 
-**Shield (Variante B):** Die Widerstände sind fest verlötet, deshalb das Shield für diesen Test **nicht** auf den Mega stecken. Stattdessen mit Steckbrücken vom Mega versorgen: Mega-5V → Stift `5V`, Mega-GND → Stift `GND`, Netzteil an J1. Dann Sockel Pin 32 ≈ 4,7 V und Pin 1 ≈ 4,4–4,5 V. Für die VCC-Stufe Stift `23` kurz an 5 V legen → Pin 32 ≈ 6,0–6,25 V, für die VPP-Stufe Stift `22` an 5 V → Pin 1 ≈ 12,75 V. Die Stifte 22/23 sind dabei mit nichts sonst verbunden, das ist ungefährlich. Zusätzlich mit dem Durchgangsprüfer: benachbarte Reihen der Leisten untereinander ohne Durchgang.
+### Spannungen prüfen: Shield
+
+Die Widerstände sind fest verlötet, deshalb das Shield für diesen Test **nicht** auf den Mega stecken. Stattdessen mit Steckbrücken vom Mega versorgen: Mega-5V → Stift `5V`, Mega-GND → Stift `GND`, Netzteil an J1. Dann Sockel Pin 32 ≈ 4,7 V und Pin 1 ≈ 4,4–4,5 V. Für die VCC-Stufe Stift `23` kurz an 5 V legen → Pin 32 ≈ 6,0–6,25 V, für die VPP-Stufe Stift `22` an 5 V → Pin 1 ≈ 12,75 V. Die Stifte 22/23 sind dabei mit nichts sonst verbunden, das ist ungefährlich. Zusätzlich mit dem Durchgangsprüfer: benachbarte Reihen der Leisten untereinander ohne Durchgang.
 
 ---
 
@@ -347,7 +392,7 @@ Dann `http://127.0.0.1:8765/index.html` öffnen. (Web Serial braucht `localhost`
 3. **Lesen** – der Inhalt erscheint als Hex-Dump. Danach wird angezeigt, ob das EPROM leer ist (alles `FF`). **Speichern** legt den Inhalt als `.bin` ab.
 
    ![Lesen mit Live-Hex-Dump](images/webapp_lesen.png)
-4. **Datei öffnen** (`.bin`) – ist die Datei kleiner als das EPROM, wird der Rest mit `FF` aufgefüllt.
+4. **Datei öffnen** (`.bin`). Ist die Datei kleiner als das EPROM und passt sie ganzzahlig hinein (z. B. 128 KiB auf 512 KiB), schreibt die App sie automatisch **mehrfach hintereinander** (hier 4×) und zeigt das rot unter den Knöpfen an – auch beim späteren Wechsel des Typs und noch einmal in der Schreiben-Abfrage. Ohne Haken bei **„kleinere Datei wiederholen“** wird stattdessen der Rest mit `FF` gefüllt.
 5. **Schreiben** – Algorithmus **Fast** wählen (beim 27C4001: Vcc 6,25 V, Vpp 12,75 V). Die App brennt blockweise (32 Byte) und liest danach automatisch zur Kontrolle zurück. Bereits richtige Bytes und `FF`-Bytes werden übersprungen – ein abgebrochener Schreibvorgang kann einfach neu gestartet werden.
 
    Während des Schreibens zeigt die App unter dem Balken eine Live-Zeile mit Adresse, Prozent, Tempo (B/s), Laufzeit, geschätzter Restzeit und **„letzte Antwort vor X s“**. Die Firmware meldet sich nach jedem Block; kommt länger als 5 s nichts, wird die Zeile rot („keine Antwort vom Programmer“). Alle 15 s landet eine Fortschrittszeile im Log, bei einem Fehler zusätzlich die letzten 40 Serial-Ereignisse.
@@ -372,7 +417,7 @@ Nur ein Programm kann den COM-Port gleichzeitig nutzen (Arduino-IDE-Monitor, Pla
 
 So wurde es hier gemacht:
 
-1. Das 128-KiB-Image 4× hintereinander zu 512 KiB zusammengesetzt (`spp-cpu-512k.500`), damit es auf einem **M27C4001** unabhängig von den oberen Adressleitungen gleich aussieht:
+1. Das 128-KiB-Image muss 4× hintereinander auf den **M27C4001**, damit es unabhängig von den oberen Adressleitungen gleich aussieht. Die Web-App macht das beim Öffnen von `spp-cpu.500` automatisch (Haken „kleinere Datei wiederholen“). Von Hand ginge es so:
    ```bash
    cat spp-cpu.500 spp-cpu.500 spp-cpu.500 spp-cpu.500 > spp-cpu-512k.500
    ```
@@ -427,7 +472,7 @@ Die Web-App bietet alle Typen der Firmware an (jeweils die „Generic“-Werte f
 | `web/` | Web-App (`index.html`, eine Datei, keine Abhängigkeiten) |
 | `start-webapp.bat` | Startet Webserver + Browser unter Windows |
 | `images/` | Fotos, Pinout und Schaltpläne |
-| `tools/lochraster_shield.py` | Erzeugt und prüft den Shield-Plan (`images/lochraster_shield.svg`) |
+| `tools/lochraster_shield.py` | Erzeugt und prüft den Shield-Plan (`images/lochraster_shield.svg` Lötseite, `images/lochraster_shield_bauteile.svg` Bauteilseite) |
 
 Basiert auf dem EpromProgrammer von Ciprian Stingu (Arduino Nano + Schieberegister + Linux-Qt-GUI). Die Linux-GUI, das Nano-PCB und das Gehäuse wurden entfernt; sie sind in der Git-Historie vor diesem Umbau noch enthalten.
 
