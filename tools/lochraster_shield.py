@@ -141,7 +141,7 @@ def svg(path, solder):
     else:
         head = ['Lochraster-Shield – Ansicht BAUTEILSEITE (von oben, wie es auf dem Mega steckt)',
                 'Hier werden die Bauteile gesteckt. Spalten/Reihen = Aufdruck. Spalte 1 rechts (gespiegelt zur Lötseite).',
-                'Transistoren: flache Seite wie gezeichnet, Beine E/B/C wie beschriftet. Diodenring = Kathode (K).']
+                'Gestrichelt und durchscheinend = Lötbahnen UNTEN (Lötseite). Durchgezogen = Bauteile und Drähte OBEN.']
     w(f'<text x="24" y="38" font-size="22" font-weight="bold" fill="#1d1d1b">{head[0]}</text>')
     for i, t in enumerate(head[1:]):
         w(f'<text x="24" y="{62+i*20}" font-size="14" fill="#6b6b66">{t}</text>')
@@ -172,13 +172,13 @@ def svg(path, solder):
     for c in range(1, 27):
         for r in range(1, 33):
             w(f'<circle cx="{X(c)}" cy="{Y(r)}" r="4" fill="#fff" stroke="#c9b79c"/>')
-    # Loetbahnen (nur Loetseite)
-    if solder:
-        for net, paths in TR.items():
-            col = NETCOL.get(net, '#8e44ad' if net in LABEL.values() else '#555')
-            for p in paths:
-                pts = ' '.join(f'{X(c)},{Y(r)}' for c, r in p)
-                w(f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>')
+    # Loetbahnen: auf der Loetseite kraeftig, von oben durchscheinend und gestrichelt
+    tstyle = 'stroke-width="6" opacity="0.75"' if solder else 'stroke-width="5" opacity="0.45" stroke-dasharray="7 5"'
+    for net, paths in TR.items():
+        col = NETCOL.get(net, '#8e44ad' if net in LABEL.values() else '#555')
+        for p in paths:
+            pts = ' '.join(f'{X(c)},{Y(r)}' for c, r in p)
+            w(f'<polyline points="{pts}" fill="none" stroke="{col}" {tstyle} stroke-linecap="round" stroke-linejoin="round"/>')
     # isolierte Drahtbruecken: auf der Bauteilseite durchgezogen, von unten gestrichelt
     for a, b, net in WIRES:
         dash = ' stroke-dasharray="7 4"' if solder else ''
@@ -250,10 +250,12 @@ def svg(path, solder):
     LX, LY = OX + (NC - 1) * S + 40, Y(10)
     w(f'<text x="{LX}" y="{LY-18}" font-size="14" font-weight="bold">Legende</text>')
     i = 0
-    if solder:
+    if True:
+        if not solder:
+            w(f'<text x="{LX}" y="{LY+4}" font-size="12" font-style="italic">Lötbahnen unten (durchscheinend):</text>'); i += 1
         for colr, t in [('#8e44ad','Signal-Bahn (je Reihe gerade)'),('#1d1d1b','GND'),('#d68910','5 V / 6,25 V / VCC'),
                         ('#c0392b','12,75 V / VPP'),('#2e6fb7','Steuerleitung 22 / 23'),('#555','Bahn innerhalb der Stufen')]:
-            w(f'<line x1="{LX}" y1="{LY+i*22}" x2="{LX+28}" y2="{LY+i*22}" stroke="{colr}" stroke-width="6" opacity="0.6" stroke-linecap="round"/>')
+            w(f'<line x1="{LX}" y1="{LY+i*22}" x2="{LX+28}" y2="{LY+i*22}" stroke="{colr}" stroke-width="6" opacity="{0.6 if solder else 0.45}" stroke-linecap="round"{"" if solder else " stroke-dasharray=\"7 5\""}/>')
             w(f'<text x="{LX+38}" y="{LY+i*22+4}" font-size="12">{t}</text>'); i += 1
     w(f'<path d="M{LX},{LY+i*22} h28" stroke="#1d1d1b" stroke-width="2.5"{" stroke-dasharray=\"7 4\"" if solder else ""}/>')
     w(f'<text x="{LX+38}" y="{LY+i*22+4}" font-size="12">isolierter Draht (Bauteilseite)</text>'); i += 1

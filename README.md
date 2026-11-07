@@ -260,7 +260,7 @@ In beiden Zeichnungen liegt der **Arduino Mega halbdurchsichtig dahinter** (blau
 
 ![Lochraster-Shield, Ansicht Bauteilseite](images/lochraster_shield_bauteile.svg)
 
-So wird bestückt (Blick von oben, so wie das Shield später auf dem Mega steckt):
+Blick von oben, so wie das Shield später auf dem Mega steckt – wie eine echte Bestückungszeichnung: **durchgezogen** = Bauteile und isolierte Drähte oben, **gestrichelt und durchscheinend** = Lötbahnen unten auf der Lötseite. So wird bestückt:
 
 - **Transistoren (TO-92):** Der Halbkreis ist der Körper von oben, die **gerade Kante ist die flache, beschriftete Seite**. Transistor so einstecken, dass seine flache Seite zur geraden Kante zeigt, dann sitzen E/B/C richtig. Maßgeblich sind die Buchstaben am Loch. Gezeichnet nach dem Pinout aus [Kap. 2](#2-teileliste) (BC337/BC327: C–B–E, S8050/S8550: E–B–C, flache Seite zu dir). Es gibt S8050/S8550 mit abweichender Belegung – im Zweifel mit dem Diodentest des Multimeters nachmessen (die Basis ist das Bein, das zu beiden anderen leitet).
 - **Dioden:** Der Ring ist die Kathode **K**. D2 liegt über Reihe 6, Ring links bei 23/6. D1 steht: Körper auf dem Loch 19/7 (K), Ring unten, das obere Drahtende zurück nach 20/7 (A).

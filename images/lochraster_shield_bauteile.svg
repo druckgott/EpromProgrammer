@@ -2,7 +2,7 @@
 <rect width="1370" height="1114" fill="#fff"/>
 <text x="24" y="38" font-size="22" font-weight="bold" fill="#1d1d1b">Lochraster-Shield – Ansicht BAUTEILSEITE (von oben, wie es auf dem Mega steckt)</text>
 <text x="24" y="62" font-size="14" fill="#6b6b66">Hier werden die Bauteile gesteckt. Spalten/Reihen = Aufdruck. Spalte 1 rechts (gespiegelt zur Lötseite).</text>
-<text x="24" y="82" font-size="14" fill="#6b6b66">Transistoren: flache Seite wie gezeichnet, Beine E/B/C wie beschriftet. Diodenring = Kathode (K).</text>
+<text x="24" y="82" font-size="14" fill="#6b6b66">Gestrichelt und durchscheinend = Lötbahnen UNTEN (Lötseite). Durchgezogen = Bauteile und Drähte OBEN.</text>
 <text x="24" y="102" font-size="14" fill="#c0392b" font-weight="bold">Vor dem Löten prüfen: Spalte 20 über den GERADEN Mega-Pins (22 … 52), Spalte 19 über den ungeraden.</text>
 <text x="24" y="122" font-size="13" fill="#0f6e8c">Blau, halbdurchsichtig: Arduino Mega darunter (Lage aus Pinout-Grafik geschätzt, ± 1 Raster).</text>
 <rect x="294.59999999999997" y="144.8" width="730.8000000000002" height="908.5999999999999" rx="6" fill="#f3e9dc" stroke="#b9a58c"/>
@@ -921,6 +921,53 @@
 <circle cx="310" cy="982" r="4" fill="#fff" stroke="#c9b79c"/>
 <circle cx="310" cy="1010" r="4" fill="#fff" stroke="#c9b79c"/>
 <circle cx="310" cy="1038" r="4" fill="#fff" stroke="#c9b79c"/>
+<polyline points="394,814 394,842 422,842 450,842 478,842 506,842 534,842 562,842 590,842 590,814 590,786 590,758 590,730 590,702 590,674 590,646 590,618 590,590 590,562 590,534 590,506 590,478 590,450 590,422 590,394 590,366 590,338" fill="none" stroke="#1d1d1b" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="590,366 618,366" fill="none" stroke="#1d1d1b" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="506,198 478,198 478,170" fill="none" stroke="#1d1d1b" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="478,366 478,338" fill="none" stroke="#d68910" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,394 562,366 562,338 562,310 562,282" fill="none" stroke="#d68910" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="506,338 534,338 562,338" fill="none" stroke="#d68910" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,394 394,366 394,338 394,310 394,282" fill="none" stroke="#c0392b" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="478,394 450,394 450,366 450,338 450,310 450,282 450,254" fill="none" stroke="#2e6fb7" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="450,226 450,198" fill="none" stroke="#555" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="422,198 422,226" fill="none" stroke="#555" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="422,254 394,254 366,254" fill="none" stroke="#555" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="450,170 422,170 394,170 394,198 394,226 366,226" fill="none" stroke="#c0392b" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="506,394 534,394 534,366" fill="none" stroke="#2e6fb7" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="674,366 646,366" fill="none" stroke="#2e6fb7" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="646,338 618,338" fill="none" stroke="#555" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="618,310 618,282" fill="none" stroke="#555" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="618,254 590,254 562,254" fill="none" stroke="#555" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="506,170 534,170 562,170 562,198 562,226 590,226" fill="none" stroke="#d68910" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,422 422,422 450,422 478,422" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,450 422,450 450,450 478,450" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,478 422,478 450,478 478,478" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,506 422,506 450,506 478,506" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,534 422,534 450,534 478,534" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,562 422,562 450,562 478,562" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,590 422,590 450,590 478,590" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,618 422,618 450,618 478,618" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,646 422,646 450,646 478,646" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,674 422,674 450,674 478,674" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,702 422,702 450,702 478,702" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,730 422,730 450,730 478,730" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,758 422,758 450,758 478,758" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="394,786 422,786 450,786 478,786" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,814 534,814 506,814" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,786 534,786 506,786" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,758 534,758 506,758" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,730 534,730 506,730" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,702 534,702 506,702" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,674 534,674 506,674" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,646 534,646 506,646" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,618 534,618 506,618" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,590 534,590 506,590" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,562 534,562 506,562" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,534 534,534 506,534" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,506 534,506 506,506" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,478 534,478 506,478" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,450 534,450 506,450" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="562,422 534,422 506,422" fill="none" stroke="#8e44ad" stroke-width="5" opacity="0.45" stroke-dasharray="7 5" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M506,198 Q548.0,158 590,338" fill="none" stroke="#1d1d1b" stroke-width="3"/>
 <path d="M534,366 Q604.0,326 674,366" fill="none" stroke="#2e6fb7" stroke-width="3"/>
 <circle cx="506" cy="366" r="9" fill="#d68910"/>
@@ -1223,27 +1270,40 @@
 <rect x="758" y="357" width="82" height="17" rx="3" fill="#fff" stroke="#999"/>
 <text x="762" y="370" font-size="11" text-anchor="start" font-weight="bold">R4 1k</text>
 <text x="1050" y="404" font-size="14" font-weight="bold">Legende</text>
-<path d="M1050,422 h28" stroke="#1d1d1b" stroke-width="2.5"/>
-<text x="1088" y="426" font-size="12">isolierter Draht (Bauteilseite)</text>
-<path d="M1050,450 h28 a14,14 0 0 0 -28,0 Z" fill="#555" fill-opacity="0.22" stroke="#1d1d1b" stroke-width="2"/>
-<text x="1088" y="448" font-size="12">TO-92 von oben: Kante = flache Seite</text>
-<text x="1050" y="496" font-size="12" font-weight="bold">Einbau:</text>
-<text x="1050" y="515" font-size="12" font-weight="normal">• Mega-Stiftleiste: Kunststoff oben,</text>
-<text x="1050" y="534" font-size="12" font-weight="normal">  lange Stifte nach unten.</text>
-<text x="1050" y="553" font-size="12" font-weight="normal">• Kerbe des EPROMs zu Reihe 1.</text>
-<text x="1050" y="572" font-size="12" font-weight="normal">• Widerstände stehend (Körper</text>
-<text x="1050" y="591" font-size="12" font-weight="normal">  auf dem Kreis, Draht zurück).</text>
-<text x="1050" y="610" font-size="12" font-weight="bold">• D2 liegend, D1 stehend:</text>
-<text x="1050" y="629" font-size="12" font-weight="normal">  Körper auf K, Ring unten.</text>
-<text x="1050" y="648" font-size="12" font-weight="normal">• Transistoren: flache Seite wie</text>
-<text x="1050" y="667" font-size="12" font-weight="normal">  gezeichnet. Beschriftung E/B/C</text>
-<text x="1050" y="686" font-size="12" font-weight="normal">  am Loch ist maßgeblich.</text>
-<text x="1050" y="705" font-size="12" font-weight="normal">• Pin 52 frei (grau).</text>
-<text x="1050" y="724" font-size="12" font-weight="normal">• Spalte 1 hängt am Anschluss-</text>
-<text x="1050" y="743" font-size="12" font-weight="normal">  feld, nicht benutzen.</text>
-<text x="1050" y="762" font-size="12" font-weight="normal">• Das EPROM sitzt über der Mega-</text>
-<text x="1050" y="781" font-size="12" font-weight="normal">  Stiftleiste: Buchsenleisten</text>
-<text x="1050" y="800" font-size="12" font-weight="normal">  (ca. 8,5 mm) sind hoch genug.</text>
-<text x="1050" y="819" font-size="12" font-weight="normal">  ZIF-Sockel nur auf Buchsen-</text>
-<text x="1050" y="838" font-size="12" font-weight="normal">  leisten als Abstandhalter.</text>
+<text x="1050" y="426" font-size="12" font-style="italic">Lötbahnen unten (durchscheinend):</text>
+<line x1="1050" y1="444" x2="1078" y2="444" stroke="#8e44ad" stroke-width="6" opacity="0.45" stroke-linecap="round" stroke-dasharray="7 5"/>
+<text x="1088" y="448" font-size="12">Signal-Bahn (je Reihe gerade)</text>
+<line x1="1050" y1="466" x2="1078" y2="466" stroke="#1d1d1b" stroke-width="6" opacity="0.45" stroke-linecap="round" stroke-dasharray="7 5"/>
+<text x="1088" y="470" font-size="12">GND</text>
+<line x1="1050" y1="488" x2="1078" y2="488" stroke="#d68910" stroke-width="6" opacity="0.45" stroke-linecap="round" stroke-dasharray="7 5"/>
+<text x="1088" y="492" font-size="12">5 V / 6,25 V / VCC</text>
+<line x1="1050" y1="510" x2="1078" y2="510" stroke="#c0392b" stroke-width="6" opacity="0.45" stroke-linecap="round" stroke-dasharray="7 5"/>
+<text x="1088" y="514" font-size="12">12,75 V / VPP</text>
+<line x1="1050" y1="532" x2="1078" y2="532" stroke="#2e6fb7" stroke-width="6" opacity="0.45" stroke-linecap="round" stroke-dasharray="7 5"/>
+<text x="1088" y="536" font-size="12">Steuerleitung 22 / 23</text>
+<line x1="1050" y1="554" x2="1078" y2="554" stroke="#555" stroke-width="6" opacity="0.45" stroke-linecap="round" stroke-dasharray="7 5"/>
+<text x="1088" y="558" font-size="12">Bahn innerhalb der Stufen</text>
+<path d="M1050,576 h28" stroke="#1d1d1b" stroke-width="2.5"/>
+<text x="1088" y="580" font-size="12">isolierter Draht (Bauteilseite)</text>
+<path d="M1050,604 h28 a14,14 0 0 0 -28,0 Z" fill="#555" fill-opacity="0.22" stroke="#1d1d1b" stroke-width="2"/>
+<text x="1088" y="602" font-size="12">TO-92 von oben: Kante = flache Seite</text>
+<text x="1050" y="650" font-size="12" font-weight="bold">Einbau:</text>
+<text x="1050" y="669" font-size="12" font-weight="normal">• Mega-Stiftleiste: Kunststoff oben,</text>
+<text x="1050" y="688" font-size="12" font-weight="normal">  lange Stifte nach unten.</text>
+<text x="1050" y="707" font-size="12" font-weight="normal">• Kerbe des EPROMs zu Reihe 1.</text>
+<text x="1050" y="726" font-size="12" font-weight="normal">• Widerstände stehend (Körper</text>
+<text x="1050" y="745" font-size="12" font-weight="normal">  auf dem Kreis, Draht zurück).</text>
+<text x="1050" y="764" font-size="12" font-weight="bold">• D2 liegend, D1 stehend:</text>
+<text x="1050" y="783" font-size="12" font-weight="normal">  Körper auf K, Ring unten.</text>
+<text x="1050" y="802" font-size="12" font-weight="normal">• Transistoren: flache Seite wie</text>
+<text x="1050" y="821" font-size="12" font-weight="normal">  gezeichnet. Beschriftung E/B/C</text>
+<text x="1050" y="840" font-size="12" font-weight="normal">  am Loch ist maßgeblich.</text>
+<text x="1050" y="859" font-size="12" font-weight="normal">• Pin 52 frei (grau).</text>
+<text x="1050" y="878" font-size="12" font-weight="normal">• Spalte 1 hängt am Anschluss-</text>
+<text x="1050" y="897" font-size="12" font-weight="normal">  feld, nicht benutzen.</text>
+<text x="1050" y="916" font-size="12" font-weight="normal">• Das EPROM sitzt über der Mega-</text>
+<text x="1050" y="935" font-size="12" font-weight="normal">  Stiftleiste: Buchsenleisten</text>
+<text x="1050" y="954" font-size="12" font-weight="normal">  (ca. 8,5 mm) sind hoch genug.</text>
+<text x="1050" y="973" font-size="12" font-weight="normal">  ZIF-Sockel nur auf Buchsen-</text>
+<text x="1050" y="992" font-size="12" font-weight="normal">  leisten als Abstandhalter.</text>
 </svg>
