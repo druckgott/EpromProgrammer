@@ -30,7 +30,15 @@
 //read a byte from eprom
 uint8_t ReadDataByte(void)
 {
+#ifdef SHIELD
+  uint8_t data = 0;
+  for(uint8_t i = 0; i < 8; i++) {
+    data |= digitalRead(dataPins[i]) << i;
+  }
+  return data;
+#else
   return PINA; // Liest alle 8 Pins (22-29) gleichzeitig ein
+#endif
 }
 //------------------------------------------------------------------------------
 

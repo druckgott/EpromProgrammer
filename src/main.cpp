@@ -48,8 +48,8 @@ void setup()
   // --- ALTE PINS ENTFERNT ---
   
   // Setze unsere direkten Adress-Pins als OUTPUT
-  for(int i = 30; i <= 48; i++) {
-    pinMode(i, OUTPUT);
+  for(uint8_t i = 0; i < 19; i++) {
+    pinMode(addrPins[i], OUTPUT);
   }
 
   // Setze die EPROM-Steuerpins als OUTPUT
@@ -63,7 +63,11 @@ void setup()
   SerialBuffer[SERIAL_BUF_LEN] = 0x00;
   
   Serial.begin(115200);
+#ifdef SHIELD
+  Serial.println(F("27[C]XXXX programmer (Mega Direct, Shield)"));
+#else
   Serial.println(F("27[C]XXXX programmer (Mega Direct)"));
+#endif
   Serial.flush();
 
   CommandMode = COMMAND_MODE::WAIT;

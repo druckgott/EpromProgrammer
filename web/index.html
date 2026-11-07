@@ -241,9 +241,9 @@ async function connect() {
   setStatus('Warte auf Programmer…');
   // Öffnen setzt den Mega per DTR zurück, danach meldet sich die Firmware
   await waitFor('27[C]XXXX programmer', 5000);
-  await waitFor('\r\n', 1000);
+  const variant = (await waitFor('\r\n', 1000)).trim();   // z. B. "(Mega Direct)" oder "(Mega Direct, Shield)"
   setStatus('Verbunden', 'ok');
-  log('Programmer gefunden.');
+  log(`Programmer gefunden ${variant}.`);
 }
 
 async function disconnect() {

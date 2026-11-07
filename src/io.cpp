@@ -28,12 +28,18 @@
 // set read/write eprom mode
 void SetDataMode(bool write)
 {
+#ifdef SHIELD
+  for(uint8_t i = 0; i < 8; i++) {
+    pinMode(dataPins[i], write ? OUTPUT : INPUT_PULLUP);
+  }
+#else
   if(write) {
     DDRA = 0xFF; // Setzt Mega Pins 22-29 als OUTPUT (extrem schnell)
   } else {
     DDRA = 0x00; // Setzt Mega Pins 22-29 als INPUT
     PORTA = 0xFF; // Aktiviert die internen Pull-Up Widerstände
   }
+#endif
 }
 //------------------------------------------------------------------------------
 
@@ -94,7 +100,8 @@ void GenerateAddress(uint32_t address, uint8_t *registerOne, uint8_t *registerTw
   }
 }
 
-const int addrPins[] = {30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48};
+const uint8_t addrPins[19] = ADDR_PINS;
+const uint8_t dataPins[8] = DATA_PINS;
 //------------------------------------------------------------------------------
 // set the address using 3 register values
 // registerOne   = addresses A0  -> A7

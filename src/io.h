@@ -25,6 +25,9 @@
 #pragma once
 //------------------------------------------------------------------------------
 
+extern const uint8_t addrPins[19];
+extern const uint8_t dataPins[8];
+
 void SetDataMode(bool write);
 void SetAddress(uint8_t registerOne, uint8_t registerTwo, uint8_t registerThree);
 void SetVppOff(void);

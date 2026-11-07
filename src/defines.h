@@ -30,7 +30,29 @@
 #define OPTIMIZE_FOR_SPEED
 
 // --- Direkte Pin-Belegung für Arduino Mega ---
+// Zwei Varianten: Steckbrett (Standard, README Kap. 4) und Lochraster-Shield
+// (Build-Umgebung "shield", -DSHIELD, README Kap. 5). Die Shield-Belegung folgt der
+// Platine: jeder EPROM-Pin liegt in derselben Reihe wie sein Mega-Pin.
 
+#ifdef SHIELD
+// Data Q0..Q7 (verteilt auf PORTL/PORTB -> Einzel-Pin-Zugriff)
+#define D0_PIN 46
+#define D1_PIN 48
+#define D2_PIN 50
+#define D3_PIN 53
+#define D4_PIN 51
+#define D5_PIN 49
+#define D6_PIN 47
+#define D7_PIN 45
+// Adressen A0..A18
+#define ADDR_PINS {44, 42, 40, 38, 36, 34, 32, 30, 33, 35, 41, 37, 28, 31, 29, 26, 24, 27, 25}
+// Eprom control
+#define NCE_PIN     43
+#define NOE_PIN     39
+#define VPP_EN_PIN  22 // Steuert die 12,75-V-Schaltstufe
+#define VCC_EN_PIN  23 // Schaltet VCC von 5V auf 6,25V (nur Brennimpuls)
+// Pin 52 bleibt frei
+#else
 // Data (Q0-Q7 mapping auf Mega Pins 22-29 / PORTA)
 #define D0_PIN 22
 #define D1_PIN 23
@@ -40,12 +62,16 @@
 #define D5_PIN 27
 #define D6_PIN 28
 #define D7_PIN 29
+// Adressen A0..A18
+#define ADDR_PINS {30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48}
 
 // Eprom control
 #define NCE_PIN     50
 #define NOE_PIN     51
 #define VPP_EN_PIN  52 // Steuert deinen 12.5V Transistor
 #define VCC_EN_PIN  53 // Schaltet VCC von 5V auf 6,25V (nur Brennimpuls)
+#endif
+#define DATA_PINS {D0_PIN, D1_PIN, D2_PIN, D3_PIN, D4_PIN, D5_PIN, D6_PIN, D7_PIN}
 // ponytail: geschätzte Einschwingzeit der VCC-Umschaltung, am Oszi nachmessen und anpassen
 #define VCC_SETTLE_US 500
 

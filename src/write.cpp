@@ -30,7 +30,13 @@
 //write a byte to eprom
 void WriteDataByte(uint8_t data)
 {
+#ifdef SHIELD
+  for(uint8_t i = 0; i < 8; i++) {
+    digitalWrite(dataPins[i], (data >> i) & 0x01);
+  }
+#else
   PORTA = data; // Schreibt das Byte gleichzeitig auf alle 8 Pins
+#endif
 }
 //------------------------------------------------------------------------------
 
