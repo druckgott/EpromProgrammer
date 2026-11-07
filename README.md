@@ -24,7 +24,7 @@ Anwendungsbeispiel: das CPU-Game-ROM eines Flippers **The Simpsons Pinball Party
 
 - [4.8 Shield: Belegung Reihe für Reihe](#48-variante-b-lochraster-shield-zum-aufstecken)
 - [Bauteilseite: Einbaurichtung (E/B/C, Diodenring)](#bauteilseite-einbaurichtung)
-- [Lötseite: Bahnen und Drahtbrücken](#lötseite-bahnen-und-drahtbrücken)
+- [Bahnen und Drahtbrücken](#bahnen-und-drahtbrücken)
 - [Zusammenbau, nur auf einer Seite gelötet](#zusammenbau-nur-auf-einer-seite-gelötet)
 - [5. Spannungen prüfen – Shield](#spannungen-prüfen-shield)
 - [6. Firmware flashen](#6-firmware-flashen) – Umgebung `shield`
@@ -227,9 +227,9 @@ C1815/A1015 können nur 150 mA – für diese Schaltung (wenige mA) reicht das.
 
 Alles auf einer Lochrasterplatine (Einzel-Lötpunkte), die direkt auf die **doppelte Stiftleiste 22–53** des Mega gesteckt wird. Auf dieser Leiste liegen auch 5 V und GND – andere Mega-Pins werden nicht gebraucht. Die Mega-Stiftleiste sitzt **in der Mitte**, links und rechts davon je eine Buchsenleiste 1×16 als EPROM-Sockel (6 Löcher = 15,24 mm Abstand). Jeder EPROM-Pin liegt in **derselben Reihe** wie sein Mega-Pin, die Verbindung ist eine gerade Lötbahn von 2–3 Löchern. Dafür ist die Pinbelegung eine andere als bei Variante A → **Firmware-Variante `shield`** nötig.
 
-**Koordinaten** = Spalten-/Reihennummern, wie sie auf der Platine aufgedruckt sind. Es gibt zwei Zeichnungen derselben Platine: **Bauteilseite** (von oben, zum Bestücken) und **Lötseite** (von unten, zum Ziehen der Bahnen). Sie sind zueinander gespiegelt – Spalte 1 ist auf der Bauteilseite rechts, auf der Lötseite links. Belegt werden nur Spalte 13–24 und Reihe 1–25; der Rest kann abgesägt werden. Spalte 1 hängt am Anschlussfeld der Platine – nicht benutzen.
+**Koordinaten** = Spalten-/Reihennummern, wie sie auf der Platine aufgedruckt sind. Die Zeichnung zeigt die Platine **von oben** (Bauteilseite), Spalte 1 ist rechts. Was unten auf der Lötseite liegt, ist gestrichelt und durchscheinend eingezeichnet. Beim Löten liegt die Platine umgedreht vor dir – dann ist alles seitenverkehrt, Spalte 1 links. Belegt werden nur Spalte 13–24 und Reihe 1–25; der Rest kann abgesägt werden. Spalte 1 hängt am Anschlussfeld der Platine – nicht benutzen.
 
-In beiden Zeichnungen liegt der **Arduino Mega halbdurchsichtig dahinter** (blau): Platinenkante, Doppelleiste und die beiden Buchsenleisten D14–D21 und A8–A15, die unter dem Shield liegen. Die Lage stammt aus einer Pinout-Grafik des Mega (geschätzt, ± 1 Raster), **nicht nachgemessen**.
+In der Zeichnung liegt der **Arduino Mega halbdurchsichtig dahinter** (blau): Platinenkante, Doppelleiste und die beiden Buchsenleisten D14–D21 und A8–A15, die unter dem Shield liegen. Die Lage stammt aus einer Pinout-Grafik des Mega (geschätzt, ± 1 Raster), **nicht nachgemessen**.
 
 > ⚠️ **Vor dem Verlöten prüfen:** Laut Mega-Pinout liegen die **geraden Pins (22, 24 … 52) in der inneren Reihe** der Doppelleiste (zur Platinenmitte), 5 V am einen, GND am anderen Ende – so ist der Plan gezeichnet. Trotzdem: Stiftleiste einstecken, Platine aufsetzen und am Aufdruck des Mega nachsehen: **Spalte 20 muss über den geraden, Spalte 19 über den ungeraden Pins liegen.** Wenn nicht: nicht löten, Plan wird gespiegelt.
 
@@ -258,7 +258,7 @@ In beiden Zeichnungen liegt der **Arduino Mega halbdurchsichtig dahinter** (blau
 
 #### Bauteilseite: Einbaurichtung
 
-![Lochraster-Shield, Ansicht Bauteilseite](images/lochraster_shield_bauteile.svg)
+![Lochraster-Shield, Ansicht von oben](images/lochraster_shield.svg)
 
 Blick von oben, so wie das Shield später auf dem Mega steckt – wie eine echte Bestückungszeichnung: **durchgezogen** = Bauteile und isolierte Drähte oben, **gestrichelt und durchscheinend** = Lötbahnen unten auf der Lötseite. So wird bestückt:
 
@@ -284,9 +284,7 @@ Blick von oben, so wie das Shield später auf dem Mega steckt – wie eine echte
 | Q3 S8050 | C 15/6, B 15/7, E 15/8 |
 | R4 1k | a 14/7, b 14/8 |
 
-#### Lötseite: Bahnen und Drahtbrücken
-
-![Lochraster-Shield, Ansicht Lötseite](images/lochraster_shield.svg)
+#### Bahnen und Drahtbrücken
 
 In Reihe 10–23 wird jeder Sockel-Pin mit dem Mega-Pin derselben Reihe verbunden, in Reihe 24 nur links: unten als Bahn bis ins Loch neben dem Mega-Stift (links Sp. 17→18, rechts Sp. 23→21), von dort mit dem **Z-Draht** oben an den Stift. **Reihe 9 bleibt in der Mitte offen** – VPP, VCC, 22 und 23 gehen zu den Schaltstufen. Pin 16 (VSS) geht nach unten zu GND.
 
@@ -335,12 +333,12 @@ So entsteht kein Lötpunkt, an den man nicht herankommt: Die Bauteile werden unt
 2. **Buchsenleisten 1×16** (EPROM) in Spalte 17 und 23 von oben stecken, unten verlöten.
 3. **Widerstände, Dioden, Transistoren, J1** nach der Bauteilseiten-Zeichnung stecken und unten verlöten. Beinchen erst nach dem Löten kürzen – die abgeschnittenen Enden eignen sich als Draht für Bahnen und Z-Drähte.
 4. **Z-Drähte:** Für jeden benutzten Mega-Stift ein Stück blanken Draht oben am Stiftende anlöten, ins Nachbarloch (Kreis in der Zeichnung) nach unten stecken und unten gleich als Bahn bis zum Sockel-Pin weiterführen und verlöten. Benachbarte Z-Drähte dürfen sich oben nicht berühren.
-5. **Restliche Lötbahnen** unten ziehen (Bild Lötseite), dann die **zwei isolierten Drahtbrücken** oben.
+5. **Restliche Lötbahnen** unten ziehen (gestrichelt in der Zeichnung), dann die **zwei isolierten Drahtbrücken** oben.
 6. **Durchgangsprüfer:** jede Verbindung vom Sockel-Pin bis zum Mega-Stift einmal; benachbarte Reihen dürfen untereinander keinen Durchgang haben.
 7. **Unterseite isolieren:** Unter dem Shield liegen die Mega-Buchsenleisten **D14–D21** (unter Reihe 7–9, ab ca. Spalte 21) und **A8–A15** (unter ca. Reihe 27). Durch den Kunststoff unter der Platine steht das Shield ca. 2,5 mm höher, trotzdem: Unterseite dort mit Isolierband abdecken, über D14–D21 laufen VPP (12,75 V) und VPP_EN. Die Platine ragt in Richtung Spalte 1 über das Ende des Mega hinaus; ab ca. Spalte 18 liegt sie über dem Mega.
 8. Spannungen prüfen wie in [Spannungen prüfen: Shield](#spannungen-prüfen-shield), erst dann aufstecken und Firmware `shield` flashen.
 
-Beide Bilder erzeugt `tools/lochraster_shield.py`. Das Skript prüft beim Erzeugen, dass jedes Loch genau ein Netz hat und jedes Netz verbunden ist – am fertigen Board trotzdem mit dem Durchgangsprüfer gegenmessen.
+Die Zeichnung erzeugt `tools/lochraster_shield.py`. Das Skript prüft beim Erzeugen, dass jedes Loch genau ein Netz hat und jedes Netz verbunden ist – am fertigen Board trotzdem mit dem Durchgangsprüfer gegenmessen.
 
 ---
 
@@ -485,7 +483,7 @@ Die Web-App bietet alle Typen der Firmware an (jeweils die „Generic“-Werte f
 | `web/` | Web-App (`index.html`, eine Datei, keine Abhängigkeiten) |
 | `start-webapp.bat` | Startet Webserver + Browser unter Windows |
 | `images/` | Fotos, Pinout und Schaltpläne |
-| `tools/lochraster_shield.py` | Erzeugt und prüft den Shield-Plan (`images/lochraster_shield.svg` Lötseite, `images/lochraster_shield_bauteile.svg` Bauteilseite) |
+| `tools/lochraster_shield.py` | Erzeugt und prüft den Shield-Plan (`images/lochraster_shield.svg`) |
 
 Basiert auf dem EpromProgrammer von Ciprian Stingu (Arduino Nano + Schieberegister + Linux-Qt-GUI). Die Linux-GUI, das Nano-PCB und das Gehäuse wurden entfernt; sie sind in der Git-Historie vor diesem Umbau noch enthalten.
 

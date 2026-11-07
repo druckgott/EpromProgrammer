@@ -1,6 +1,6 @@
 # Lochraster-Shield (README 4.8): Mega-Stiftleiste in der Mitte, Sockelleisten links/rechts, je Reihe eine gerade Loetbahn.
 # Koordinaten (Spalte, Reihe) = Aufdruck der Platine, Ansicht LOETSEITE. Prueft Netze (jedes Loch ein Netz, jedes Netz verbunden).
-# Aufruf: python -X utf8 tools/lochraster_shield.py images/lochraster_shield.svg images/lochraster_shield_bauteile.svg  -> SVGs (Loet-/Bauteilseite), Markdown-Tabellen (stdout), C-Pinlisten fuer defines.h (stderr)
+# Aufruf: python -X utf8 tools/lochraster_shield.py images/lochraster_shield.svg  -> SVG (Ansicht von oben), Markdown-Tabellen (stdout), C-Pinlisten fuer defines.h (stderr)
 import sys
 
 ODD_COL, EVEN_COL = 19, 20            # Annahme: gerade Mega-Pins = innere Reihe (zur Mega-Mitte)
@@ -295,8 +295,7 @@ NETCOL = {'GND':'#1d1d1b','5V':'#d68910','VCC':'#d68910','+6V25':'#d68910','VPP'
           'VPP_EN':'#2e6fb7','VCC_EN':'#2e6fb7'}
 NAMEPOS = {'J1':(10,1),'Q1 BC337':(26,2),'R1 1k':(10,3),'R2 1k':(26,3),'Q2 BC327':(26,4),'R3 10k':(26,5),
            'D2 1N5819':(26,6),'D1 1N5819':(10,6),'Q4 S8550':(10,4),'R6 10k':(10,2),'R5 1k':(10,5),'Q3 S8050':(10,7),'R4 1k':(10,8)}
-svg(sys.argv[1], True)
-svg(sys.argv[2], False)
+svg(sys.argv[1], False)   # nur Ansicht von oben; svg(pfad, True) zeichnet bei Bedarf die Loetseite
 # ---------- Markdown ----------
 fm = lambda h: f'{h[0]}/{h[1]}'
 print('| Reihe | Sockel links (Sp. 17) | Mega links (Sp. 19) | Mega rechts (Sp. 20) | Sockel rechts (Sp. 23) |')
