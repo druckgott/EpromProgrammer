@@ -80,7 +80,7 @@ Datenblatt: https://www.datasheet-pdf.info/entry/M27C4001
 | 2 | Widerstand 10 kΩ | Pull-up je Schaltstufe |
 | 2 | Schottky-Diode **1N5819** | D1 (5 V → VCC), D2 (VCC → VPP) |
 | – | Breadboard, Steckbrücken | Aufbau (Variante A) |
-| – | statt Breadboard: Lochrasterplatine (Einzelpunkte), Stiftleiste 2×18 (oder 2 × 1×18, Stapelleiste geht auch), 2 Buchsenleisten 1×16, 3-polige Stiftleiste, Silberdraht | Shield (Variante B, [4.8](#48-variante-b-lochraster-shield-zum-aufstecken)) |
+| – | statt Breadboard: Lochrasterplatine (Einzelpunkte), Stiftleiste 2×18 (oder 2 × 1×18), 2 Buchsenleisten 1×16, 3-polige Stiftleiste, Silberdraht, Kleber (z. B. 2K-Epoxid) | Shield (Variante B, [4.8](#48-variante-b-lochraster-shield-zum-aufstecken)) |
 | – | UV-Löschgerät | Fenster-EPROMs löschen |
 
 Die zwei Transistorpaare haben **unterschiedliche Pinouts** (TO-92, flache Seite zu dir, Beine unten, links→rechts):
@@ -263,9 +263,10 @@ In beiden Zeichnungen liegt der **Arduino Mega halbdurchsichtig dahinter** (blau
 Blick von oben, so wie das Shield später auf dem Mega steckt – wie eine echte Bestückungszeichnung: **durchgezogen** = Bauteile und isolierte Drähte oben, **gestrichelt und durchscheinend** = Lötbahnen unten auf der Lötseite. So wird bestückt:
 
 - **Transistoren (TO-92):** Der Halbkreis ist der Körper von oben, die **gerade Kante ist die flache, beschriftete Seite**. Transistor so einstecken, dass seine flache Seite zur geraden Kante zeigt, dann sitzen E/B/C richtig. Maßgeblich sind die Buchstaben am Loch. Gezeichnet nach dem Pinout aus [Kap. 2](#2-teileliste) (BC337/BC327: C–B–E, S8050/S8550: E–B–C, flache Seite zu dir). Es gibt S8050/S8550 mit abweichender Belegung – im Zweifel mit dem Diodentest des Multimeters nachmessen (die Basis ist das Bein, das zu beiden anderen leitet).
-- **Dioden:** Der Ring ist die Kathode **K**. D2 liegt über Reihe 6, Ring links bei 23/6. D1 steht: Körper auf dem Loch 19/7 (K), Ring unten, das obere Drahtende zurück nach 20/7 (A).
+- **Dioden:** Der Ring ist die Kathode **K**. D2 liegt über Reihe 6, Ring links bei 23/6. D1 steht: Körper auf dem Loch 18/7 (K), Ring unten, das obere Drahtende zurück nach 19/7 (A).
 - **Widerstände** stehend: Körper auf dem gezeichneten Kreis, Draht zurück ins Nachbarloch. Richtung egal.
-- **EPROM:** Kerbe zu Reihe 1 (zu J1). Das EPROM sitzt über der Mega-Stiftleiste. Buchsenleisten mit ca. 8,5 mm Höhe reichen darüber; ein ZIF-Sockel braucht Buchsenleisten als Abstandhalter darunter (Kunststoff + Stiftenden der Mega-Leiste stehen ca. 5–6 mm hoch, nicht nachgemessen).
+- **Mega-Stiftleiste:** Kunststoff **unter** der Platine (zwischen Shield und Mega), oben ragen nur die kurzen Stiftenden heraus. Daran werden die **Z-Drähte** gelötet (siehe [Zusammenbau](#zusammenbau-nur-auf-einer-seite-gelötet)).
+- **EPROM:** Kerbe zu Reihe 1 (zu J1). Das EPROM liegt über den Stiftenden und Z-Drähten der Mega-Leiste. Dort steht oben nur ca. 1,5 mm Stift plus Draht (Standardmaße, nicht gemessen), Buchsenleisten reichen also locker.
 
 | Bauteil | Bein → Loch (Sp./R.) |
 | :--- | :--- |
@@ -276,7 +277,7 @@ Blick von oben, so wie das Shield später auf dem Mega steckt – wie eine echte
 | Q2 BC327 | E 23/3, B 23/4, C 23/5 |
 | R3 10k | a 24/3, b 24/4 |
 | D2 1N5819 | A 17/6, K (Ring) 23/6 |
-| D1 1N5819 | K (Ring) 19/7, A 20/7 |
+| D1 1N5819 | K (Ring) 18/7, A 19/7 |
 | Q4 S8550 | E 17/3, B 17/4, C 17/5 |
 | R6 10k | a 16/3, b 16/4 |
 | R5 1k | a 15/4, b 15/5 |
@@ -287,29 +288,31 @@ Blick von oben, so wie das Shield später auf dem Mega steckt – wie eine echte
 
 ![Lochraster-Shield, Ansicht Lötseite](images/lochraster_shield.svg)
 
-In Reihe 10–23 wird jeder Sockel-Pin mit dem Mega-Pin daneben verbunden (links Sp. 17→19, rechts Sp. 23→20), in Reihe 24 nur links. **Reihe 9 bleibt in der Mitte offen** – VPP, VCC, 22 und 23 gehen zu den Schaltstufen. Pin 16 (VSS) geht nach unten zu GND.
+In Reihe 10–23 wird jeder Sockel-Pin mit dem Mega-Pin derselben Reihe verbunden, in Reihe 24 nur links: unten als Bahn bis ins Loch neben dem Mega-Stift (links Sp. 17→18, rechts Sp. 23→21), von dort mit dem **Z-Draht** oben an den Stift. **Reihe 9 bleibt in der Mitte offen** – VPP, VCC, 22 und 23 gehen zu den Schaltstufen. Pin 16 (VSS) geht nach unten zu GND.
 
-**Alles wird auf der Lötseite verbunden**, alle Bauteile stecken von oben – oben muss nichts gelötet werden. Auf der Lötseite kreuzt sich keine Bahn (das Skript prüft, dass jedes Loch nur zu einem Netz gehört). Dafür braucht es:
+Die Bauteile stecken von oben und werden unten gelötet. Einzige Ausnahme sind die Stifte der Mega-Leiste: Ihre Pads liegen unten unter dem Kunststoff, deshalb werden sie **oben** über Z-Drähte angeschlossen. Auf der Lötseite kreuzt sich keine Bahn, und unter dem Kunststoff (Sp. 19/20, Reihe 8–25) liegt keine (beides prüft das Skript). Dafür braucht es:
+
+- **Z-Draht** an jedem benutzten Mega-Stift: blanker Draht, oben am Stiftende angelötet, durchs Nachbarloch nach unten und dort gleich als Bahn weiter. In der Zeichnung: Strich vom Stift zu einem kleinen Kreis = Loch, in dem der Draht nach unten geht. Bei GND ein Bügel über beide GND-Stifte (18/25 → 19/25 → 20/25 → 21/25), bei 5 V vom Stift 20/8 nach 20/7.
 
 - **Lötbrücke** (Zinn zwischen zwei Nachbarpunkten) bei Bahnen über **2 Löcher**.
-- **Blanker Draht** (Silberdraht oder abgeschnittenes Bauteilbein) bei Bahnen ab **3 Löchern**: auf die Punkte legen und an jedem Loch verlöten. Das betrifft alle Signal-Bahnen (links 3, rechts 4 Löcher) sowie GND, VCC, VPP, VPP_EN, +12,75 V und +6,25 V.
+- **Blanker Draht** (Silberdraht oder abgeschnittenes Bauteilbein) bei Bahnen ab **3 Löchern**: auf die Punkte legen und an jedem Loch verlöten. Das betrifft GND, VCC, VPP, VPP_EN, +12,75 V und +6,25 V. Bei den Signal-Bahnen ist es einfach die Verlängerung des Z-Drahts bis zum Sockel-Pin.
 - **Zwei isolierte Drahtbrücken** auf der Bauteilseite, wo sich Bahnen sonst kreuzen würden: **GND** 19/2 → 16/7 und **VCC_EN** 18/8 → 13/8. Draht von oben durchstecken, unten verlöten. 13/8 ist ein freies Loch neben R4 (Lötbrücke 13/8 → 14/8), damit kein Loch zwei Drähte aufnehmen muss.
 
 **Lötbahnen der Stromversorgung und Schaltstufen** (Loch für Loch geradeaus bzw. um die Ecke, wie im Bild):
 
 | Netz | Lötbahn |
 | :--- | :--- |
-| GND | 23/24 (Pin 16) → 23/25 → 16/25 → hoch bis 16/7, dazu 16/8 → 15/8 (Q3 E) |
+| GND | Bügel oben über 19/25 und 20/25; unten 21/25 → 23/25 → 23/24 (Pin 16) und 18/25 → 16/25 → hoch bis 16/7, dazu 16/8 → 15/8 (Q3 E) |
 | GND | 19/2 → 20/2 → 20/1 (Q1 E an J1 GND) |
-| 5 V | 20/8 → 20/7 (D1 A) |
-| VCC (Pin 32) | 17/9 → 17/5 (D2 A, Q4 C), dazu 19/7 → 17/7 (D1 K) |
+| 5 V | Z-Draht 20/8 → 20/7, unten 20/7 → 19/7 (D1 A) |
+| VCC (Pin 32) | 17/9 → 17/5 (D2 A, Q4 C), dazu 18/7 → 17/7 (D1 K) |
 | VPP (Pin 1) | 23/9 → 23/5 (D2 K, Q2 C) |
-| VPP_EN (Mega 22) | 20/9 → 21/9 → hoch bis 21/4 (R1) |
+| VPP_EN (Mega 22) | Z-Draht 20/9 → 21/9, unten 21/9 → hoch bis 21/4 (R1) |
 | Q1 Basis | 21/3 → 21/2 |
 | Q1 Kollektor | 22/2 → 22/3 |
 | Q2 Basis | 22/4 → 23/4 → 24/4 |
 | +12,75 V | 21/1 → 23/1 → 23/3 → 24/3 |
-| VCC_EN (Mega 23) | 19/9 → 18/9 → 18/8, dazu 13/8 → 14/8 (R4) |
+| VCC_EN (Mega 23) | Z-Draht 19/9 → 18/9, unten 18/9 → 18/8, dazu 13/8 → 14/8 (R4) |
 | Q3 Basis | 14/7 → 15/7 |
 | Q3 Kollektor | 15/6 → 15/5 |
 | Q4 Basis | 15/4 → 16/4 → 17/4 |
@@ -317,15 +320,25 @@ In Reihe 10–23 wird jeder Sockel-Pin mit dem Mega-Pin daneben verbunden (links
 
 #### Zusammenbau, nur auf einer Seite gelötet
 
-Reihenfolge so, dass jedes Teil von oben gesteckt und unten gelötet wird:
+So entsteht kein Lötpunkt, an den man nicht herankommt: Die Bauteile werden unten gelötet, die Mega-Stifte oben.
 
-1. **Mega-Stiftleiste 2×18** von der Bauteilseite einstecken: Kunststoff **oben**, lange Stifte nach unten durch die Platine, unten verlöten. Tipp: Die Stifte vorher mit einer flachen Zange etwas durch den Kunststoff nach oben schieben, dann bleibt unten mehr Länge für die Mega-Buchse. Lötstellen klein halten, sie sitzen direkt auf der Mega-Buchse. Aufstecken und prüfen (Spalte 20 über den geraden Pins), erst dann weiter.
-2. **Buchsenleisten 1×16** (EPROM) in Spalte 17 und 23, unten verlöten.
-3. **Widerstände, Dioden, Transistoren, J1** nach der Bauteilseiten-Zeichnung stecken und verlöten. Beinchen erst nach dem Löten kürzen – die abgeschnittenen Enden eignen sich als blanker Draht für die Bahnen.
-4. **Lötbahnen** auf der Lötseite ziehen (Bild Lötseite), dann die **zwei isolierten Drahtbrücken** oben.
-5. **Durchgangsprüfer:** jede Bahn einmal; benachbarte Reihen der Leisten dürfen untereinander keinen Durchgang haben.
-6. **Unterseite isolieren:** Das Shield liegt auf den Mega-Buchsenleisten **D14–D21** (unter Reihe 7–9, ab ca. Spalte 21) und **A8–A15** (unter ca. Reihe 27) auf. Über D14–D21 laufen VPP (12,75 V) und VPP_EN. Die Unterseite dort mit Isolierband abdecken, sonst kann eine Lötstelle einen Mega-Pin berühren. Die Platine ragt in Richtung Spalte 1 über das Ende des Mega hinaus; ab ca. Spalte 18 liegt sie über dem Mega.
-7. Spannungen prüfen wie in [Spannungen prüfen: Shield](#spannungen-prüfen-shield), erst dann aufstecken und Firmware `shield` flashen.
+```
+ OBEN          Buchsenleiste     Z-Draht ┌───● kurzes Stiftende (oben angelötet)
+                   ██            ┌───────┘   │
+ ══════════════════╪═════════════╪═══════════╪══════  Platine
+ UNTEN            (●)━━━━━━━━━━━(●)         ███  Kunststoff der Stiftleiste
+                  Sp.17  Bahn   Sp.18        ║
+                                             ║  lange Stifte → in den Mega
+```
+
+1. **Mega-Stiftleiste 2×18** von **unten** einstecken: Kunststoff unten an der Platine, lange Stifte nach unten zum Mega, kurze Enden ragen oben heraus (ca. 1,5 mm bei Standardleisten, nicht gemessen). Die Stifte dürfen dabei durch den Kunststoff etwas nach oben geschoben werden, dann bleibt oben mehr zum Anlöten. Den Kunststoff mit wenig **Kleber** an die Platinenunterseite kleben: Die Stifte sind nicht an ihren Pads verlötet und halten sonst nur an den Z-Drähten. Damit alles gerade wird, beim Kleben die langen Stifte in eine zweite Buchsenleiste stecken (oder in den Mega ohne Strom – dann aufpassen, dass kein Kleber in die Buchse läuft). Aushärten lassen, abziehen. Beim späteren Abziehen vom Mega immer am Shield neben der Leiste ziehen.
+2. **Buchsenleisten 1×16** (EPROM) in Spalte 17 und 23 von oben stecken, unten verlöten.
+3. **Widerstände, Dioden, Transistoren, J1** nach der Bauteilseiten-Zeichnung stecken und unten verlöten. Beinchen erst nach dem Löten kürzen – die abgeschnittenen Enden eignen sich als Draht für Bahnen und Z-Drähte.
+4. **Z-Drähte:** Für jeden benutzten Mega-Stift ein Stück blanken Draht oben am Stiftende anlöten, ins Nachbarloch (Kreis in der Zeichnung) nach unten stecken und unten gleich als Bahn bis zum Sockel-Pin weiterführen und verlöten. Benachbarte Z-Drähte dürfen sich oben nicht berühren.
+5. **Restliche Lötbahnen** unten ziehen (Bild Lötseite), dann die **zwei isolierten Drahtbrücken** oben.
+6. **Durchgangsprüfer:** jede Verbindung vom Sockel-Pin bis zum Mega-Stift einmal; benachbarte Reihen dürfen untereinander keinen Durchgang haben.
+7. **Unterseite isolieren:** Unter dem Shield liegen die Mega-Buchsenleisten **D14–D21** (unter Reihe 7–9, ab ca. Spalte 21) und **A8–A15** (unter ca. Reihe 27). Durch den Kunststoff unter der Platine steht das Shield ca. 2,5 mm höher, trotzdem: Unterseite dort mit Isolierband abdecken, über D14–D21 laufen VPP (12,75 V) und VPP_EN. Die Platine ragt in Richtung Spalte 1 über das Ende des Mega hinaus; ab ca. Spalte 18 liegt sie über dem Mega.
+8. Spannungen prüfen wie in [Spannungen prüfen: Shield](#spannungen-prüfen-shield), erst dann aufstecken und Firmware `shield` flashen.
 
 Beide Bilder erzeugt `tools/lochraster_shield.py`. Das Skript prüft beim Erzeugen, dass jedes Loch genau ein Netz hat und jedes Netz verbunden ist – am fertigen Board trotzdem mit dem Durchgangsprüfer gegenmessen.
 

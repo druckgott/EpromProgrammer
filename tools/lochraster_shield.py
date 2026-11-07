@@ -33,7 +33,7 @@ PARTS = {
  'Q2 BC327':  {'E':(23,3), 'B':(23,4), 'C':(23,5)},
  'R3 10k':    {'a':(24,3), 'b':(24,4)},
  'D2 1N5819': {'A':(17,6), 'K':(23,6)},
- 'D1 1N5819': {'K':(19,7), 'A':(20,7)},
+ 'D1 1N5819': {'K':(18,7), 'A':(19,7)},
  'Q4 S8550':  {'E':(17,3), 'B':(17,4), 'C':(17,5)},
  'R6 10k':    {'a':(16,3), 'b':(16,4)},
  'R5 1k':     {'a':(15,4), 'b':(15,5)},
@@ -61,17 +61,17 @@ for p, n in MEGA.items(): NETLEGS[LABEL[p]] = [sock(p), hdr(n)]
 
 # Loetbahnen (auf der Loetseite, Loch an Loch) je Netz
 TR = {
- 'GND':    [[sock(16), (23,25), (22,25), (21,25), (20,25), (19,25), (18,25), (17,25), (16,25)] + [(16, r) for r in range(24, 6, -1)],
+ 'GND':    [[sock(16), (23,25), (22,25), (21,25)], [(18,25), (17,25), (16,25)] + [(16, r) for r in range(24, 6, -1)],
             [(16,8), (15,8)], [(19,2), (20,2), (20,1)]],
- '5V':     [[(20,8), (20,7)]],
- 'VCC':    [[(17,9), (17,8), (17,7), (17,6), (17,5)], [(19,7), (18,7), (17,7)]],
+ '5V':     [[(20,7), (19,7)]],
+ 'VCC':    [[(17,9), (17,8), (17,7), (17,6), (17,5)], [(18,7), (17,7)]],
  'VPP':    [[(23,9), (23,8), (23,7), (23,6), (23,5)]],
- 'VPP_EN': [[(20,9), (21,9), (21,8), (21,7), (21,6), (21,5), (21,4)]],
+ 'VPP_EN': [[(21,9), (21,8), (21,7), (21,6), (21,5), (21,4)]],
  'B1':     [[(21,3), (21,2)]],
  'C1':     [[(22,2), (22,3)]],
  'B2':     [[(22,4), (23,4), (24,4)]],
  '+12V75': [[(21,1), (22,1), (23,1), (23,2), (23,3), (24,3)]],
- 'VCC_EN': [[(19,9), (18,9), (18,8)], [(13,8), (14,8)]],
+ 'VCC_EN': [[(18,9), (18,8)], [(13,8), (14,8)]],
  'B3':     [[(14,7), (15,7)]],
  'C3':     [[(15,6), (15,5)]],
  'B4':     [[(15,4), (16,4), (17,4)]],
@@ -80,7 +80,14 @@ TR = {
 for p, n in MEGA.items():
     (c, r), (hc, _) = sock(p), hdr(n)
     step = 1 if hc > c else -1
-    TR[LABEL[p]] = [[(x, r) for x in range(c, hc + step, step)]]
+    TR[LABEL[p]] = [[(x, r) for x in range(c, hc, step)]]          # endet im Loch neben dem Mega-Stift
+# Z-Draehte: Mega-Stiftleiste mit Kunststoff UNTER der Platine, die kurzen Stiftenden ragen oben heraus.
+# Die Pads der Stifte sind vom Kunststoff verdeckt -> Draht oben am Stiftende anloeten, durchs Nachbarloch
+# nach unten, unten als Bahn weiter. (Stift-Loch, Nachbarloch, Netz)
+ZW = [(hdr(n), (hdr(n)[0] + (-1 if hdr(n)[0] == ODD_COL else 1), hdr(n)[1]), LABEL[p]) for p, n in MEGA.items()]
+ZW += [(hdr(VCC_EN), (18,9), 'VCC_EN'), (hdr(VPP_EN), (21,9), 'VPP_EN'), ((20,8), (20,7), '5V'),
+       ((19,25), (18,25), 'GND'), ((20,25), (21,25), 'GND'), ((19,25), (20,25), 'GND')]   # GND: ein Buegel ueber beide Stifte
+KEEPOUT = {(c, r) for c in (ODD_COL, EVEN_COL) for r in range(8, 26)}   # unten vom Kunststoff verdeckt
 # Isolierte Drahtbruecken (Bauteilseite)
 WIRES = [((19,2), (16,7), 'GND'), ((18,8), (13,8), 'VCC_EN')]   # Draht nicht ins Loch eines Bauteilbeins
 
@@ -98,7 +105,8 @@ for net, paths in TR.items():
     for path in paths:
         for a, b in zip(path, path[1:]): assert abs(a[0]-b[0]) + abs(a[1]-b[1]) == 1, ('nicht benachbart', net, a, b)
         for h in path: take(h, net)
-for a, b, net in WIRES: take(a, net); take(b, net)
+for a, b, net in WIRES + ZW: take(a, net); take(b, net)
+assert not KEEPOUT & {h for paths in TR.values() for p in paths for h in p}, 'Bahn unter dem Stiftleisten-Kunststoff'
 used_by_part_or_sock = {h for legs in PARTS.values() for h in legs.values()} | {sock(p) for p in range(1, 33)}
 parent = {}
 def f(x):
@@ -108,8 +116,7 @@ def f(x):
 for paths in TR.values():
     for path in paths:
         for a, b in zip(path, path[1:]): parent[f(a)] = f(b)
-for a, b, _ in WIRES: parent[f(a)] = f(b)
-parent[f(hdr('5V')[0])] = f(hdr('5V')[1])             # beide 5V-Stifte sind im Mega verbunden
+for a, b, _ in WIRES + ZW: parent[f(a)] = f(b)
 for net, legs in NETLEGS.items():
     roots = {f(h) for h in legs}
     assert len(roots) == 1, ('Netz nicht verbunden', net, legs)
@@ -179,6 +186,10 @@ def svg(path, solder):
         for p in paths:
             pts = ' '.join(f'{X(c)},{Y(r)}' for c, r in p)
             w(f'<polyline points="{pts}" fill="none" stroke="{col}" {tstyle} stroke-linecap="round" stroke-linejoin="round"/>')
+    for a, b, net in ZW:      # Z-Draht oben: am Stiftende angeloetet, Nachbarloch nach unten
+        col = NETCOL.get(net, '#8e44ad')
+        w(f'<line x1="{X(a[0])}" y1="{Y(a[1])}" x2="{X(b[0])}" y2="{Y(b[1])}" stroke="{col}" stroke-width="{2.5 if solder else 4}" stroke-linecap="round"{" stroke-dasharray=\"4 3\"" if solder else ""}/>')
+        w(f'<circle cx="{X(b[0])}" cy="{Y(b[1])}" r="4" fill="#fff" stroke="{col}" stroke-width="2.5"/>')
     # isolierte Drahtbruecken: auf der Bauteilseite durchgezogen, von unten gestrichelt
     for a, b, net in WIRES:
         dash = ' stroke-dasharray="7 4"' if solder else ''
@@ -259,18 +270,22 @@ def svg(path, solder):
             w(f'<text x="{LX+38}" y="{LY+i*22+4}" font-size="12">{t}</text>'); i += 1
     w(f'<path d="M{LX},{LY+i*22} h28" stroke="#1d1d1b" stroke-width="2.5"{" stroke-dasharray=\"7 4\"" if solder else ""}/>')
     w(f'<text x="{LX+38}" y="{LY+i*22+4}" font-size="12">isolierter Draht (Bauteilseite)</text>'); i += 1
+    w(f'<line x1="{LX}" y1="{LY+i*22}" x2="{LX+20}" y2="{LY+i*22}" stroke="#8e44ad" stroke-width="{2.5 if solder else 4}"{" stroke-dasharray=\"4 3\"" if solder else ""}/><circle cx="{LX+24}" cy="{LY+i*22}" r="4" fill="#fff" stroke="#8e44ad" stroke-width="2.5"/>')
+    w(f'<text x="{LX+38}" y="{LY+i*22+4}" font-size="12">Z-Draht oben, Kreis = Loch nach unten</text>'); i += 1
     w(f'<path d="M{LX},{LY+i*22+6} h28 a14,14 0 0 0 -28,0 Z" fill="#555" fill-opacity="0.22" stroke="#1d1d1b" stroke-width="2"/>')
     w(f'<text x="{LX+38}" y="{LY+i*22+4}" font-size="12">TO-92 von {"unten" if solder else "oben"}: Kante = flache Seite</text>'); i += 1
     if solder:
         notes = ['Lötbahnen:', '• 2 Löcher: Lötbrücke genügt.', '• ab 3 Löchern: blanken Draht', '  (Silberdraht) auflegen und an', '  jedem Loch verlöten.',
                  '• Benachbarte Reihen dürfen sich', '  nicht berühren – nachmessen.', '',
-                 'Über der Mega-Buchsenleiste', 'D14–D21 (Reihe 7–9, ab Sp. 21)', 'liegt das Shield auf: Lötstellen', 'flach, Isolierband drunter –', 'dort läuft VPP (12,75 V)!']
+                 '• Mega-Stifte (Sp. 19/20) unten', '  NICHT löten: der Kunststoff', '  liegt hier, Anschluss nur über', '  die Z-Drähte oben.', '',
+                 'Über der Mega-Buchsenleiste', 'D14–D21 (Reihe 7–9, ab Sp. 21)', 'dort läuft VPP (12,75 V):', 'Isolierband auf die Unterseite.']
     else:
-        notes = ['Einbau:', '• Mega-Stiftleiste: Kunststoff oben,', '  lange Stifte nach unten.', '• Kerbe des EPROMs zu Reihe 1.',
+        notes = ['Einbau:', '• Mega-Stiftleiste von UNTEN:', '  Kunststoff zwischen Shield und', '  Mega, kurze Enden ragen oben', '  heraus. Kunststoff ankleben.',
+             '• Z-Drähte: oben am Stiftende', '  anlöten, durchs Nachbarloch', '  nach unten, unten weiter als Bahn.', '• Kerbe des EPROMs zu Reihe 1.',
                  '• Widerstände stehend (Körper', '  auf dem Kreis, Draht zurück).', '• D2 liegend, D1 stehend:', '  Körper auf K, Ring unten.',
                  '• Transistoren: flache Seite wie', '  gezeichnet. Beschriftung E/B/C', '  am Loch ist maßgeblich.', '• Pin 52 frei (grau).',
                  '• Spalte 1 hängt am Anschluss-', '  feld, nicht benutzen.',
-                 '• Das EPROM sitzt über der Mega-', '  Stiftleiste: Buchsenleisten', '  (ca. 8,5 mm) sind hoch genug.', '  ZIF-Sockel nur auf Buchsen-', '  leisten als Abstandhalter.']
+                 '• Das EPROM liegt über den Z-', '  Drähten (oben nur ca. 1,5 mm', '  Stiftende + Draht).']
     for k, t in enumerate(notes):
         w(f'<text x="{LX}" y="{LY+i*22+30+k*19}" font-size="12" font-weight="{"bold" if k == 0 or t.endswith(":") else "normal"}">{t}</text>')
     w('</svg>')
