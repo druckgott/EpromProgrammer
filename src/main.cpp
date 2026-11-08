@@ -217,6 +217,16 @@ void loop()
       CommandMode = COMMAND_MODE::WAIT;
       break;
 
+    case COMMAND_MODE::VOLTAGE_TEST:
+      Serial.print(F(RESPONSE_FLAG));
+      Serial.println(F(COMMAND_VOLTAGE_TEST " ON"));
+      VoltageTest();
+      Serial.print(F(RESPONSE_FLAG));
+      Serial.println(F(COMMAND_VOLTAGE_TEST " OFF"));
+      Serial.flush();
+      CommandMode = COMMAND_MODE::WAIT;
+      break;
+
     case COMMAND_MODE::TEST_SPEED: //just to be sure
       if(EpromSelected != EPROM_TYPE::NONE)
       {
@@ -327,6 +337,9 @@ void loop()
           }
           else if(StringPos(SerialBuffer, COMMAND_TEST, commandFlagIndex + 4) != -1) {
             CommandMode = COMMAND_MODE::TEST;
+          }
+          else if(StringPos(SerialBuffer, COMMAND_VOLTAGE_TEST, commandFlagIndex + 4) != -1) {
+            CommandMode = COMMAND_MODE::VOLTAGE_TEST;
           }
           else if(StringPos(SerialBuffer, COMMAND_TEST_SPEED, commandFlagIndex + 4) != -1) {
             CommandMode = COMMAND_MODE::TEST_SPEED;

@@ -31,4 +31,5 @@ void TestFunctionPin(uint8_t pin, const char *onMessage, const char *offMessage)
 void TestVppPin(uint8_t vppPin, const char *pinName);
 void TestMode(void);
 void TestSpeed(void);
+void VoltageTest(void);
 //------------------------------------------------------------------------------

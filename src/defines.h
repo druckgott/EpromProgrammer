@@ -88,6 +88,7 @@
 // Serial & Timing
 #define SERIAL_BUF_LEN 32
 #define TEST_STEP_WAIT 2500
+#define VTEST_STEP_MS 10000 // Spannungstest: so lange bleibt jede Stufe an (Zeit zum Messen)
 #define MIN_VCC 4.50
 #define MAX_VCC 6.50
 #define MIN_VPP 10.00
@@ -111,6 +112,7 @@
 #define RESPONSE_TEST          COMMAND_TEST
 #define RESPONSE_WRITE_EPROM   COMMAND_WRITE_EPROM
 #define COMMAND_TEST_SPEED     "SPED"
+#define COMMAND_VOLTAGE_TEST   "VTST"
 
 enum COMMAND_MODE {
   WAIT,
@@ -118,7 +120,8 @@ enum COMMAND_MODE {
   WRITE,
   VOLTAGE,
   TEST,
-  TEST_SPEED
+  TEST_SPEED,
+  VOLTAGE_TEST
 };
 
 enum EPROM_TYPE {

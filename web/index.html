@@ -55,6 +55,7 @@
     <button id="btnVerify" disabled>Verify</button>
     <button id="btnOpen">Datei öffnen</button>
     <button id="btnSave" disabled>Speichern</button>
+    <button id="btnVTest" disabled title="Schaltet 10 s VCC 6,25 V, dann 10 s VPP 12,75 V ein – nur ohne EPROM!">Spannungstest</button>
     <input id="file" type="file" hidden>
     <label title="Datei kleiner als das EPROM: mehrfach hintereinander schreiben statt Rest mit FF füllen"><input id="mirror" type="checkbox" checked> kleinere Datei wiederholen</label>
     <span id="info"></span>
@@ -163,6 +164,7 @@ function updateButtons() {
   $('btnWrite').disabled = !c || !fileData;
   $('btnVerify').disabled = !c || !fileData;
   $('btnSave').disabled = busy || !lastRead;
+  $('btnVTest').disabled = !c;
   $('btnConnect').disabled = busy;
   $('type').disabled = busy;
   $('btnConnect').textContent = port ? 'Trennen' : 'Verbinden';
@@ -417,6 +419,24 @@ $('btnVerify').onclick = () => run('Verify', async () => {
   const diffs = compare(data, lastRead);
   if (diffs.length) throw new Error(`${diffs.length} Abweichungen, erste bei 0x${diffs[0].toString(16).toUpperCase()}: Datei ${data[diffs[0]].toString(16)}, EPROM ${lastRead[diffs[0]].toString(16)}`);
   log('Verify OK: EPROM entspricht der Datei.');
+  setStatus('Verbunden', 'ok');
+});
+
+$('btnVTest').onclick = () => run('Spannungstest', async () => {
+  if (!confirm('EPROM aus dem Sockel genommen?\nEs werden nacheinander je 10 s VCC 6,25 V (Pin 32) und VPP 12,75 V (Pin 1) eingeschaltet.')) return;
+  rx = '';
+  await send('@CMDVTST');
+  await waitFor(OK, 3000);
+  // Schrittmeldungen der Firmware ("* ...") sofort ins Log; zwischen den Meldungen liegen 10 s Stille
+  await waitFor('@RSPVTST OFF\r\n', 15000, buf => {
+    let used = 0, end;
+    while ((end = buf.indexOf('\r\n', used)) >= 0) {
+      const line = buf.slice(used, end);
+      if (line.startsWith('* ')) log(line.slice(2));
+      used = end + 2;
+    }
+    return used;
+  });
   setStatus('Verbunden', 'ok');
 });
 

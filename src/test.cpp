@@ -210,3 +210,22 @@ void TestSpeed(void)
   Serial.println(rate, 2);
 }
 //------------------------------------------------------------------------------
+// Schaltstufen nacheinander einschalten, damit man ohne EPROM am Sockel messen kann:
+// erst VCC (Pin 32 -> 6,25 V), dann VPP allein (Pin 1 -> 12,75 V, Pin 32 bleibt ~4,7 V).
+void VoltageTest(void)
+{
+  InitializeEpromToAKnownState();
+  Serial.println(F("* VCC an: Pin 32 ~6,25 V messen"));
+  Serial.flush();
+  digitalWrite(VCC_EN_PIN, HIGH);
+  delay(VTEST_STEP_MS);
+  digitalWrite(VCC_EN_PIN, LOW);
+  Serial.println(F("* VCC aus. VPP an: Pin 1 ~12,75 V, Pin 32 bleibt ~4,7 V"));
+  Serial.flush();
+  SetVppOn(0);
+  delay(VTEST_STEP_MS);
+  SetVppOff();
+  Serial.println(F("* VPP aus. Pin 32 ~4,7 V, Pin 1 ~4,5 V"));
+  InitializeEpromToAKnownState();
+}
+//------------------------------------------------------------------------------
